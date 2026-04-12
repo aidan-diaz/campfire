@@ -14,7 +14,7 @@ export default async function HomePage() {
       </header>
       <main className="mx-auto max-w-2xl px-6 py-16">
         <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Welcome to Campfire
+          Welcome to Campfire (Dev Mode)
         </h1>
         <p className="mt-3 text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
           You&apos;re signed in. Use this space for your app — lists, posts, or whatever you
