@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAts } from '@/context/AtsContext';
-import { getCompanyById, stageLabels, ApplicationStage } from '@/data/ats/mockData';
+import { getCompanyById, ApplicationStage } from '@/data/ats/mockData';
 import {
   Briefcase, Plus, Search, Users, Calendar, CheckCircle2,
   Clock, Eye, MoreHorizontal, ChevronRight, Filter, FileText,
@@ -76,8 +76,25 @@ export default function RecruiterJobsList() {
           </button>
         </div>
 
+        {/* Summary Cards — above search */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5">
+          {[
+            { label: 'Open Roles', value: myJobs.filter((j) => j.status === 'open').length, color: '#10b981', icon: <CheckCircle2 size={16} /> },
+            { label: 'Drafts', value: myJobs.filter((j) => j.status === 'draft').length, color: '#94a3b8', icon: <FileText size={16} /> },
+            { label: 'Avg. Applicants / Role', value: myJobs.length > 0 ? (myJobs.reduce((s, j) => s + j.applicantIds.length, 0) / myJobs.filter((j) => j.status === 'open').length || 0).toFixed(1) : '0', color: '#818cf8', icon: <Users size={16} /> },
+          ].map((s) => (
+            <div key={s.label} className="rounded-xl border p-4" style={{ background: `${s.color}08`, borderColor: `${s.color}20` }}>
+              <div className="flex items-center gap-2 mb-2" style={{ color: s.color }}>
+                {s.icon}
+                <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em' }}>{s.label.toUpperCase()}</span>
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9' }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+
         {/* Search & Filter */}
-        <div className="flex items-center gap-3 mt-5">
+        <div className="flex flex-wrap items-center gap-3 mt-5">
           <div className="relative flex-1 max-w-sm">
             <Search size={14} style={{ color: '#475569', position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
             <input
@@ -210,23 +227,6 @@ export default function RecruiterJobsList() {
             })}
           </div>
         )}
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-3 gap-4 mt-6">
-          {[
-            { label: 'Open Roles', value: myJobs.filter((j) => j.status === 'open').length, color: '#10b981', icon: <CheckCircle2 size={16} /> },
-            { label: 'Drafts', value: myJobs.filter((j) => j.status === 'draft').length, color: '#94a3b8', icon: <FileText size={16} /> },
-            { label: 'Avg. Applicants / Role', value: myJobs.length > 0 ? (myJobs.reduce((s, j) => s + j.applicantIds.length, 0) / myJobs.filter((j) => j.status === 'open').length || 0).toFixed(1) : '0', color: '#818cf8', icon: <Users size={16} /> },
-          ].map((s) => (
-            <div key={s.label} className="rounded-xl border p-4" style={{ background: `${s.color}08`, borderColor: `${s.color}20` }}>
-              <div className="flex items-center gap-2 mb-2" style={{ color: s.color }}>
-                {s.icon}
-                <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em' }}>{s.label.toUpperCase()}</span>
-              </div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9' }}>{s.value}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

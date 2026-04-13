@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useAts } from '@/context/AtsContext';
 import { TaskCard } from '@/components/ats/shared/TaskCard';
+import { NewQuestApplyModal } from '@/components/ats/shared/NewQuestApplyModal';
 import { allTasks, Task, getDifficultyConfig, getCompanyById, type Job } from '@/data/ats/mockData';
-import { Swords, Trophy, Sparkles, Filter, CheckCircle2 } from 'lucide-react';
+import { Swords, Trophy, Sparkles, Filter, CheckCircle2, Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 
 type FilterType = 'all' | 'general' | 'company' | 'role' | 'completed';
@@ -15,6 +16,8 @@ export default function TasksHub() {
   const [typeFilter, setTypeFilter] = useState<FilterType>('all');
   const [diffFilter, setDiffFilter] = useState<DiffFilter>('all');
   const [taskComplete, setTaskComplete] = useState<Task | null>(null);
+  const [applyModal, setApplyModal] = useState(false);
+  const [applyModalJobId, setApplyModalJobId] = useState<string | null>(null);
 
   const completedTaskIds = new Set(currentApplicant.completedTasks.map((ct) => ct.taskId));
 
@@ -49,18 +52,41 @@ export default function TasksHub() {
     role: byType.role.filter((t) => completedTaskIds.has(t.id)).length,
   };
 
+  const openApplyModal = (jobId?: string) => {
+    setApplyModalJobId(jobId ?? null);
+    setApplyModal(true);
+  };
+
+  const closeApplyModal = () => {
+    setApplyModal(false);
+    setApplyModalJobId(null);
+  };
+
   return (
     <div className="min-h-screen" style={{ background: '#0a0a14' }}>
       {/* Header */}
       <div className="px-6 pt-8 pb-6 border-b" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
-        <div className="flex items-center gap-2 mb-1">
-          <Swords size={16} style={{ color: '#7c3aed' }} />
-          <span style={{ fontSize: 12, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>CHALLENGES</span>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Swords size={16} style={{ color: '#7c3aed' }} />
+              <span style={{ fontSize: 12, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>CHALLENGES</span>
+            </div>
+            <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>Quest Board</h1>
+            <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
+              Complete challenges to prove your skills and advance through your journeys
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => openApplyModal()}
+            className="flex items-center gap-2 rounded-xl px-4 py-2.5 transition-all hover:opacity-90 shrink-0"
+            style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', color: 'white', fontSize: 13, fontWeight: 600, boxShadow: '0 0 20px rgba(124,58,237,0.3)' }}
+          >
+            <Plus size={16} />
+            New Quest
+          </button>
         </div>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>Quest Board</h1>
-        <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
-          Complete challenges to prove your skills and advance through your journeys
-        </p>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mt-6">
@@ -206,6 +232,8 @@ export default function TasksHub() {
       </div>
 
       {/* Completion Toast */}
+      <NewQuestApplyModal open={applyModal} onClose={closeApplyModal} initialJobId={applyModalJobId} />
+
       {taskComplete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
           <motion.div
