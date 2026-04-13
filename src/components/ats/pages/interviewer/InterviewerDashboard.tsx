@@ -1,16 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAts } from '@/context/AtsContext';
-import { XPBar } from '@/components/ats/shared/XPBar';
 import {
-  getCompanyById, stageLabels, stageStoryLabels,
+  getCompanyById, stageStoryLabels,
   allTasks,
 } from '@/data/ats/mockData';
 import {
-  Users, Map, Star, Sparkles, ChevronRight, CheckCircle2,
-  Swords, MessageSquare, Award, Shield, Clock, Scroll,
+  Users, Star, ChevronRight, CheckCircle2,
+  Swords, Shield, Clock, Scroll,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -34,9 +32,6 @@ export default function InterviewerDashboard() {
 
   const activeItems = assignedItems.filter(
     ({ application }) => application.stage !== 'hired' && application.stage !== 'rejected'
-  );
-  const completedItems = assignedItems.filter(
-    ({ application }) => application.stage === 'hired' || application.stage === 'rejected'
   );
 
   const roleLabel =
@@ -78,11 +73,10 @@ export default function InterviewerDashboard() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 mt-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
           {[
             { label: 'Interviews Assigned', value: assignedItems.length, color: company?.color || '#2563eb', icon: <Users size={16} /> },
             { label: 'Scorecards Filed', value: completedScorecards.length, color: '#10b981', icon: <CheckCircle2 size={16} /> },
-            { label: 'Avg. Recommendation', value: completedScorecards.filter((s) => s.recommendation === 'advance').length > 0 ? 'Advance' : 'Pending', color: '#f59e0b', icon: <Award size={16} /> },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border p-3" style={{ background: `${s.color}08`, borderColor: `${s.color}20` }}>
               <div className="flex items-center gap-2 mb-2" style={{ color: s.color }}>
@@ -115,7 +109,6 @@ export default function InterviewerDashboard() {
                 const comp = getCompanyById(application.companyId);
                 if (!job || !comp) return null;
 
-                const currentStageData = job.stages.find((s) => s.name.toLowerCase().replace(' ', '_') === application.stage || s.id.includes(application.stage));
                 const hasScorecard = scorecardsList.some(
                   (sc) => sc.applicantId === applicant.id && sc.jobId === job.id && sc.interviewerId === currentTeamMember.id
                 );
@@ -167,11 +160,6 @@ export default function InterviewerDashboard() {
                             >
                               {stageStoryLabels[application.stage]}
                             </span>
-                          </div>
-
-                          {/* XP Bar compact */}
-                          <div className="mt-3">
-                            <XPBar level={applicant.level} xp={applicant.xp} xpToNextLevel={applicant.xpToNextLevel} compact />
                           </div>
                         </div>
                       </div>

@@ -6,26 +6,25 @@ import { useAts } from '@/context/AtsContext';
 import { XPBar } from '@/components/ats/shared/XPBar';
 import { JourneyPath } from '@/components/ats/shared/JourneyPath';
 import { TaskCard } from '@/components/ats/shared/TaskCard';
+import { NewQuestApplyModal } from '@/components/ats/shared/NewQuestApplyModal';
 import {
   getCompanyById, allTasks, Task,
-  stageStoryLabels, stageLabels, Application,
+  stageStoryLabels, Application,
   getTeamMemberById,
   type Job,
 } from '@/data/ats/mockData';
 import {
-  Map, Plus, MessageSquare, Trophy, Sparkles, ChevronRight,
-  Building2, Swords, Star, X, CheckCircle2,
+  Map, MessageSquare, Trophy, Sparkles, ChevronRight,
+  Building2, Swords,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function ApplicantDashboard() {
-  const { currentApplicant, allJobs, applyToJob, completeTask } = useAts();
+  const { currentApplicant, allJobs, completeTask } = useAts();
   const jobById = (id: string) => allJobs.find((j) => j.id === id);
   const router = useRouter();
   const [applyModal, setApplyModal] = useState(false);
-  const [applyStep, setApplyStep] = useState(1);
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
-  const [source, setSource] = useState('');
+  const [applyModalJobId, setApplyModalJobId] = useState<string | null>(null);
   const [taskCompleteModal, setTaskCompleteModal] = useState<Task | null>(null);
   const [journeyTab, setJourneyTab] = useState<'active' | 'strengthen'>('active');
 
@@ -52,46 +51,31 @@ export default function ApplicantDashboard() {
     }
   };
 
-  const handleApply = async () => {
-    if (!selectedJob) return;
-    const job = jobById(selectedJob);
-    if (!job) return;
-    try {
-      await applyToJob(selectedJob, job.companyId, source || 'Direct');
-    } catch {
-      return;
-    }
+  const openApplyModal = (jobId?: string) => {
+    setApplyModalJobId(jobId ?? null);
+    setApplyModal(true);
+  };
+
+  const closeApplyModal = () => {
     setApplyModal(false);
-    setApplyStep(1);
-    setSelectedJob(null);
-    setSource('');
+    setApplyModalJobId(null);
   };
 
   return (
     <div className="min-h-screen" style={{ background: '#0a0a14' }}>
       {/* Header */}
       <div className="px-6 pt-8 pb-6 border-b" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
-        <div className="flex items-start justify-between gap-4 mb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Map size={16} style={{ color: '#7c3aed' }} />
-              <span style={{ fontSize: 12, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>YOUR JOURNEY</span>
-            </div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
-              Welcome back, {currentApplicant.firstName}
-            </h1>
-            <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
-              {activeApplications.length} active quest{activeApplications.length !== 1 ? 's' : ''} · {currentApplicant.completedTasks.length} challenges completed
-            </p>
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Map size={16} style={{ color: '#7c3aed' }} />
+            <span style={{ fontSize: 12, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>YOUR JOURNEY</span>
           </div>
-          <button
-            onClick={() => setApplyModal(true)}
-            className="flex items-center gap-2 rounded-xl px-4 py-2.5 transition-all hover:opacity-90 shrink-0"
-            style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', color: 'white', fontSize: 13, fontWeight: 600, boxShadow: '0 0 20px rgba(124,58,237,0.3)' }}
-          >
-            <Plus size={16} />
-            New Quest
-          </button>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+            Welcome back, {currentApplicant.firstName}
+          </h1>
+          <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
+            {activeApplications.length} active quest{activeApplications.length !== 1 ? 's' : ''} · {currentApplicant.completedTasks.length} challenges completed
+          </p>
         </div>
         <XPBar level={currentApplicant.level} xp={currentApplicant.xp} xpToNextLevel={currentApplicant.xpToNextLevel} />
       </div>
@@ -131,12 +115,12 @@ export default function ApplicantDashboard() {
         </div>
 
         {journeyTab === 'active' && (
-          <div className="space-y-4 max-w-4xl">
+          <div className="space-y-4 w-full">
             {activeApplications.length === 0 ? (
               <div className="rounded-xl border text-center py-12" style={{ borderColor: 'rgba(124,58,237,0.1)', background: 'rgba(255,255,255,0.01)' }}>
                 <Map size={32} style={{ color: '#334155', margin: '0 auto 12px' }} />
                 <p style={{ fontSize: 14, color: '#475569' }}>No active quests yet.</p>
-                <button onClick={() => setApplyModal(true)} style={{ fontSize: 13, color: '#a78bfa', marginTop: 8 }}>Start your first journey →</button>
+                <button onClick={() => openApplyModal()} style={{ fontSize: 13, color: '#a78bfa', marginTop: 8 }}>Start your first journey →</button>
               </div>
             ) : (
               activeApplications.map((app) => (
@@ -147,7 +131,7 @@ export default function ApplicantDashboard() {
         )}
 
         {journeyTab === 'strengthen' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 max-w-5xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
             <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(124,58,237,0.15)', background: 'rgba(255,255,255,0.01)' }}>
               <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
                 <Sparkles size={14} style={{ color: '#f59e0b' }} />
@@ -189,7 +173,7 @@ export default function ApplicantDashboard() {
                         <div style={{ fontSize: 11, color: company?.color }}>{company?.name}</div>
                       </div>
                       <button
-                        onClick={() => { setSelectedJob(job.id); setApplyModal(true); }}
+                        onClick={() => openApplyModal(job.id)}
                         className="shrink-0 rounded-lg px-3 py-1.5 transition-all hover:opacity-80"
                         style={{ background: 'rgba(124,58,237,0.15)', color: '#a78bfa', fontSize: 11, fontWeight: 600 }}
                       >
@@ -204,7 +188,7 @@ export default function ApplicantDashboard() {
         )}
 
         {journeyTab === 'active' && completedApplications.length > 0 && (
-          <div className="space-y-4 max-w-4xl pt-2 border-t" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
+          <div className="space-y-4 w-full pt-2 border-t" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: '#f1f5f9' }}>Past Quests</h2>
             {completedApplications.map((app) => (
               <ApplicationCard key={app.id} app={app} onCompleteTask={handleCompleteTask} completedTaskIds={completedTaskIds} jobById={jobById} />
@@ -213,144 +197,7 @@ export default function ApplicantDashboard() {
         )}
       </div>
 
-      {/* Apply Modal */}
-      {applyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg rounded-2xl border overflow-hidden"
-            style={{ background: '#0f0f1e', borderColor: 'rgba(124,58,237,0.2)' }}
-          >
-            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
-              <div>
-                <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>NEW QUEST</div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f1f5f9' }}>
-                  {applyStep === 1 ? 'Choose Your Quest' : applyStep === 2 ? 'Share Your Path' : 'Begin the Journey'}
-                </h3>
-              </div>
-              <button onClick={() => { setApplyModal(false); setApplyStep(1); setSelectedJob(null); }}><X size={20} style={{ color: '#64748b' }} /></button>
-            </div>
-
-            <div className="px-6 py-5">
-              {applyStep === 1 && (
-                <div className="space-y-3">
-                  <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>Select a role to begin your journey</p>
-                  {openJobs.map((job) => {
-                    const company = getCompanyById(job.companyId);
-                    return (
-                      <button
-                        key={job.id}
-                        onClick={() => setSelectedJob(job.id)}
-                        className="w-full flex items-center gap-3 rounded-xl border text-left transition-all p-4"
-                        style={{
-                          borderColor: selectedJob === job.id ? company?.color || '#7c3aed' : 'rgba(124,58,237,0.1)',
-                          background: selectedJob === job.id ? `${company?.color}15` : 'rgba(255,255,255,0.01)',
-                        }}
-                      >
-                        <div className="flex items-center justify-center rounded-lg shrink-0" style={{ width: 36, height: 36, background: `${company?.color}20`, fontSize: 16 }}>
-                          {company?.logo}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: '#f1f5f9' }}>{job.title}</div>
-                          <div style={{ fontSize: 12, color: company?.color }}>{company?.name} · {job.team}</div>
-                        </div>
-                        {selectedJob === job.id && <CheckCircle2 size={16} style={{ color: company?.color, marginLeft: 'auto' }} />}
-                      </button>
-                    );
-                  })}
-                  {openJobs.length === 0 && <p style={{ fontSize: 13, color: '#64748b', textAlign: 'center', padding: '24px 0' }}>You've applied to all open roles!</p>}
-                </div>
-              )}
-
-              {applyStep === 2 && (
-                <div className="space-y-4">
-                  <div>
-                    <label style={{ fontSize: 13, color: '#94a3b8', display: 'block', marginBottom: 8 }}>How did you hear about this role?</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['LinkedIn', 'Referral', 'Company Website', 'Indeed', 'Twitter/X', 'Other'].map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => setSource(s)}
-                          className="rounded-lg py-2 px-3 text-left transition-all"
-                          style={{
-                            fontSize: 13,
-                            background: source === s ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.02)',
-                            color: source === s ? '#a78bfa' : '#94a3b8',
-                            border: `1px solid ${source === s ? '#7c3aed' : 'rgba(124,58,237,0.1)'}`,
-                          }}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {selectedJob && (
-                    <div className="rounded-xl p-3" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)' }}>
-                      <p style={{ fontSize: 12, color: '#94a3b8' }}>
-                        <span style={{ color: '#a78bfa', fontWeight: 600 }}>Required on apply: </span>
-                        Complete the role's required challenge after applying to stand out.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {applyStep === 3 && (
-                <div className="text-center py-4">
-                  <div
-                    className="flex items-center justify-center rounded-full mx-auto mb-4"
-                    style={{ width: 64, height: 64, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', boxShadow: '0 0 30px rgba(124,58,237,0.4)' }}
-                  >
-                    <Map size={28} color="white" />
-                  </div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f1f5f9', marginBottom: 8 }}>Quest Begun! ⚔️</h3>
-                  <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6 }}>
-                    Your application is in. Complete challenges to boost your ranking and move faster through the journey.
-                  </p>
-                  <div className="flex items-center gap-2 justify-center mt-4 px-4 py-3 rounded-xl" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)' }}>
-                    <Star size={14} style={{ color: '#f59e0b' }} />
-                    <span style={{ fontSize: 12, color: '#f59e0b' }}>Complete challenges to earn XP and level up your journey!</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="px-6 py-4 border-t flex gap-3" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
-              {applyStep < 3 && (
-                <>
-                  {applyStep > 1 && (
-                    <button onClick={() => setApplyStep(applyStep - 1)} className="flex-1 rounded-xl py-2.5" style={{ background: 'rgba(255,255,255,0.04)', color: '#94a3b8', fontSize: 14 }}>
-                      Back
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (applyStep === 2) { handleApply(); setApplyStep(3); }
-                      else if (selectedJob) setApplyStep(applyStep + 1);
-                    }}
-                    disabled={applyStep === 1 && !selectedJob}
-                    className="flex-1 rounded-xl py-2.5 flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-40"
-                    style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', color: 'white', fontSize: 14, fontWeight: 600 }}
-                  >
-                    {applyStep === 2 ? 'Begin Quest' : 'Continue'}
-                    <ChevronRight size={16} />
-                  </button>
-                </>
-              )}
-              {applyStep === 3 && (
-                <button
-                  onClick={() => { setApplyModal(false); setApplyStep(1); setSelectedJob(null); }}
-                  className="flex-1 rounded-xl py-2.5"
-                  style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', color: 'white', fontSize: 14, fontWeight: 600 }}
-                >
-                  View My Journey
-                </button>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      )}
+      <NewQuestApplyModal open={applyModal} onClose={closeApplyModal} initialJobId={applyModalJobId} />
 
       {/* Task Complete Modal */}
       {taskCompleteModal && (

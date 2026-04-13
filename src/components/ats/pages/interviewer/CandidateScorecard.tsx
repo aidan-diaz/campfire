@@ -6,13 +6,13 @@ import { useAts } from '@/context/AtsContext';
 import { XPBar } from '@/components/ats/shared/XPBar';
 import { JourneyPath } from '@/components/ats/shared/JourneyPath';
 import {
-  getCompanyById, getTeamMemberById, allTasks, stageLabels,
+  getCompanyById, allTasks, stageLabels,
   stageStoryLabels, ApplicationStage, ScoreCard, RubricItem,
 } from '@/data/ats/mockData';
 import {
   ChevronLeft, Star, CheckCircle2, Sparkles, MessageSquare,
   Award, Swords, User, ScrollText, BookOpen, ThumbsUp, ThumbsDown,
-  Minus, Clock, Send, Shield, ChevronDown, ChevronUp, Target,
+  Minus, Send, Shield, Target, X,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -58,7 +58,7 @@ export default function CandidateScorecard() {
   const [applicantFeedback, setApplicantFeedback] = useState(existingCard?.feedbackForApplicant || application?.feedbackForApplicant || '');
   const [recommendation, setRecommendation] = useState<'advance' | 'reject' | 'hold'>(existingCard?.recommendation || 'hold');
   const [submitted, setSubmitted] = useState(!!existingCard);
-  const [activeSection, setActiveSection] = useState<'rubric' | 'tasks' | 'profile'>('rubric');
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   if (!applicant || !job || !company || !application) {
     return (
@@ -141,6 +141,82 @@ export default function CandidateScorecard() {
         (ct.task.type === 'company' && ct.task.companyId === company.id))
     );
 
+  const profilePanel = (
+    <div className="space-y-5">
+      <XPBar level={applicant.level} xp={applicant.xp} xpToNextLevel={applicant.xpToNextLevel} />
+
+      <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <User size={13} style={{ color: '#7c3aed' }} />
+          <span style={{ fontSize: 11, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>CANDIDATE PROFILE</span>
+        </div>
+        <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6 }}>{applicant.jobGoal}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {applicant.skills.map((skill) => (
+            <span key={skill} className="px-2 py-0.5 rounded-full" style={{ fontSize: 10, background: 'rgba(124,58,237,0.1)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.15)' }}>
+              {skill}
+            </span>
+          ))}
+        </div>
+        <p style={{ fontSize: 11, color: '#64748b', lineHeight: 1.6, fontStyle: 'italic' }}>{applicant.resumeSnippet}</p>
+      </div>
+
+      <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
+        <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
+          <Swords size={13} style={{ color: '#a78bfa' }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>Relevant Challenges</span>
+          <span className="ml-auto px-2 py-0.5 rounded-full" style={{ fontSize: 10, background: 'rgba(124,58,237,0.15)', color: '#a78bfa', fontWeight: 700 }}>
+            {relevantTasks.length}
+          </span>
+        </div>
+        <div className="p-3 space-y-2">
+          {relevantTasks.length === 0 ? (
+            <p style={{ fontSize: 12, color: '#475569', padding: '8px 0' }}>No relevant challenges completed yet.</p>
+          ) : (
+            relevantTasks.map(({ task, dateCompleted, pointsEarned }) => {
+              const typeColors: Record<string, string> = { general: '#818cf8', company: '#f472b6', role: '#fbbf24' };
+              const diffColors: Record<string, string> = { easy: '#10b981', medium: '#f59e0b', hard: '#ef4444' };
+              return (
+                <div key={task.id} className="rounded-lg border p-2.5" style={{ background: 'rgba(16,185,129,0.04)', borderColor: 'rgba(16,185,129,0.12)' }}>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 size={12} style={{ color: '#10b981', marginTop: 1 }} />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#f1f5f9' }}>{task.name}</div>
+                      <p style={{ fontSize: 10, color: '#64748b', lineHeight: 1.4, marginTop: 2 }}>{task.why}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span style={{ fontSize: 9, color: typeColors[task.type], fontWeight: 600 }}>{task.type === 'general' ? 'Universal' : task.type}</span>
+                        <span style={{ fontSize: 9, color: diffColors[task.difficulty], fontWeight: 600 }}>{task.difficulty}</span>
+                        <Sparkles size={8} style={{ color: '#f59e0b' }} />
+                        <span style={{ fontSize: 9, color: '#f59e0b' }}>+{pointsEarned} XP</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {currentStageData && currentStageData.passCriteria.length > 0 && (
+        <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
+          <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
+            <Target size={13} style={{ color: '#a78bfa' }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>Pass Criteria — {stageLabels[application.stage]}</span>
+          </div>
+          <div className="p-3 space-y-1.5">
+            {currentStageData.passCriteria.map((c) => (
+              <div key={c} className="flex items-center gap-2">
+                <CheckCircle2 size={11} style={{ color: '#475569' }} />
+                <span style={{ fontSize: 12, color: '#94a3b8' }}>{c}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const inputStyle = {
     width: '100%',
     background: 'rgba(255,255,255,0.03)',
@@ -169,9 +245,25 @@ export default function CandidateScorecard() {
               {applicant.avatar}
             </div>
             <div>
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
-                {applicant.firstName} {applicant.lastName}
-              </h1>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 style={{ fontSize: 24, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+                  {applicant.firstName} {applicant.lastName}
+                </h1>
+                <button
+                  type="button"
+                  onClick={() => setProfileModalOpen(true)}
+                  className="rounded-xl px-3 py-1.5 transition-all hover:opacity-90 shrink-0"
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: '#a78bfa',
+                    background: 'rgba(124,58,237,0.12)',
+                    border: '1px solid rgba(124,58,237,0.25)',
+                  }}
+                >
+                  View Profile
+                </button>
+              </div>
               <div className="flex items-center gap-2 mt-1">
                 <span style={{ fontSize: 12, color: company.color, fontWeight: 600 }}>{job.title}</span>
                 <span style={{ fontSize: 10, color: '#475569' }}>·</span>
@@ -203,88 +295,8 @@ export default function CandidateScorecard() {
         </div>
       </div>
 
-      <div className="px-6 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Profile + Tasks */}
+      <div className="px-6 py-6 max-w-4xl mx-auto w-full">
         <div className="space-y-5">
-          {/* XP */}
-          <XPBar level={applicant.level} xp={applicant.xp} xpToNextLevel={applicant.xpToNextLevel} />
-
-          {/* Profile Summary */}
-          <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-            <div className="flex items-center gap-2 mb-1">
-              <User size={13} style={{ color: '#7c3aed' }} />
-              <span style={{ fontSize: 11, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>CANDIDATE PROFILE</span>
-            </div>
-            <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6 }}>{applicant.jobGoal}</p>
-            <div className="flex flex-wrap gap-1.5">
-              {applicant.skills.map((skill) => (
-                <span key={skill} className="px-2 py-0.5 rounded-full" style={{ fontSize: 10, background: 'rgba(124,58,237,0.1)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.15)' }}>
-                  {skill}
-                </span>
-              ))}
-            </div>
-            <p style={{ fontSize: 11, color: '#64748b', lineHeight: 1.6, fontStyle: 'italic' }}>{applicant.resumeSnippet}</p>
-          </div>
-
-          {/* Relevant Tasks */}
-          <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-            <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
-              <Swords size={13} style={{ color: '#a78bfa' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>Relevant Challenges</span>
-              <span className="ml-auto px-2 py-0.5 rounded-full" style={{ fontSize: 10, background: 'rgba(124,58,237,0.15)', color: '#a78bfa', fontWeight: 700 }}>
-                {relevantTasks.length}
-              </span>
-            </div>
-            <div className="p-3 space-y-2">
-              {relevantTasks.length === 0 ? (
-                <p style={{ fontSize: 12, color: '#475569', padding: '8px 0' }}>No relevant challenges completed yet.</p>
-              ) : (
-                relevantTasks.map(({ task, dateCompleted, pointsEarned }) => {
-                  const typeColors: Record<string, string> = { general: '#818cf8', company: '#f472b6', role: '#fbbf24' };
-                  const diffColors: Record<string, string> = { easy: '#10b981', medium: '#f59e0b', hard: '#ef4444' };
-                  return (
-                    <div key={task.id} className="rounded-lg border p-2.5" style={{ background: 'rgba(16,185,129,0.04)', borderColor: 'rgba(16,185,129,0.12)' }}>
-                      <div className="flex items-start gap-2">
-                        <CheckCircle2 size={12} style={{ color: '#10b981', marginTop: 1 }} />
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: '#f1f5f9' }}>{task.name}</div>
-                          <p style={{ fontSize: 10, color: '#64748b', lineHeight: 1.4, marginTop: 2 }}>{task.why}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span style={{ fontSize: 9, color: typeColors[task.type], fontWeight: 600 }}>{task.type === 'general' ? 'Universal' : task.type}</span>
-                            <span style={{ fontSize: 9, color: diffColors[task.difficulty], fontWeight: 600 }}>{task.difficulty}</span>
-                            <Sparkles size={8} style={{ color: '#f59e0b' }} />
-                            <span style={{ fontSize: 9, color: '#f59e0b' }}>+{pointsEarned} XP</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* Stage Criteria */}
-          {currentStageData && currentStageData.passCriteria.length > 0 && (
-            <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
-                <Target size={13} style={{ color: '#a78bfa' }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>Pass Criteria — {stageLabels[application.stage]}</span>
-              </div>
-              <div className="p-3 space-y-1.5">
-                {currentStageData.passCriteria.map((c) => (
-                  <div key={c} className="flex items-center gap-2">
-                    <CheckCircle2 size={11} style={{ color: '#475569' }} />
-                    <span style={{ fontSize: 12, color: '#94a3b8' }}>{c}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right: Scorecard Form */}
-        <div className="lg:col-span-2 space-y-5">
           {submitted && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -496,6 +508,49 @@ export default function CandidateScorecard() {
           </div>
         </div>
       </div>
+
+      {/* Candidate profile (formerly left column) */}
+      {profileModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.75)' }}
+          onClick={() => setProfileModalOpen(false)}
+          role="presentation"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl border flex flex-col"
+            style={{ background: '#0f0f1e', borderColor: 'rgba(124,58,237,0.2)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b shrink-0" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="flex items-center justify-center rounded-full shrink-0"
+                  style={{ width: 40, height: 40, background: `linear-gradient(135deg,${company.color},${company.accentColor})`, fontSize: 14, fontWeight: 800, color: 'white' }}
+                >
+                  {applicant.avatar}
+                </div>
+                <div className="min-w-0">
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>{applicant.firstName} {applicant.lastName}</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }} className="truncate">{applicant.email}</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setProfileModalOpen(false)}
+                className="p-2 rounded-lg shrink-0 transition-all hover:opacity-80"
+                style={{ background: 'rgba(255,255,255,0.05)', color: '#94a3b8' }}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="overflow-y-auto px-5 py-4 flex-1">{profilePanel}</div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
