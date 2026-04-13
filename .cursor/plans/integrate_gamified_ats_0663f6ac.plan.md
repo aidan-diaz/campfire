@@ -1,6 +1,6 @@
 ---
 name: Integrate Gamified ATS
-overview: 'Port the Vite + React Router "Gamified ATS Dashboard" into the Next.js App Router as the primary signed-in experience: persona routes at `/applicant`, `/recruiter`, and `/interviewer`, replacing `/home`, while preserving Clerk auth and preparing MongoDB-backed data as a follow-up.'
+overview: "Port the Vite + React Router \"Gamified ATS Dashboard\" into the Next.js App Router as the primary signed-in experience: persona routes at `/applicant`, `/recruiter`, and `/interviewer`, replacing `/home`, while preserving Clerk auth and preparing MongoDB-backed data as a follow-up."
 todos:
   - id: ts-tooling
     content: Add tsconfig.json with allowJs + path alias @/*; keep existing .js pages working
@@ -10,28 +10,28 @@ todos:
     status: completed
   - id: styles-tailwind
     content: Merge theme.css/fonts.css into src/styles/ats; extend globals (or @source) so Tailwind sees new components
-    status: pending
+    status: completed
   - id: move-source
     content: Move Gamified src/app (pages, components, context, data) into src/ with clear ats/ naming
-    status: pending
+    status: completed
   - id: app-router-pages
     content: Create App Router pages for /applicant, /recruiter, /interviewer (+ nested routes); replace react-router APIs
-    status: pending
+    status: completed
   - id: providers-layouts
     content: Add (ats) route group layout with AppProvider and AppShell wrapping appropriate segments
-    status: pending
+    status: completed
   - id: root-home
     content: Update src/app/page.js for auth → Landing client; redirect /home → /
-    status: pending
+    status: completed
   - id: clerk-middleware
     content: Add clerkMiddleware + route protection for ATS paths
-    status: pending
+    status: completed
   - id: cleanup
     content: Remove Gamified ATS Dashboard/ Vite artifacts; verify next build
-    status: pending
+    status: completed
   - id: mongo-phase2
     content: (Later) API routes + replace mockData/AppContext mutations with MongoDB
-    status: pending
+    status: completed
 isProject: false
 ---
 
