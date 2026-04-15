@@ -19,6 +19,12 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
+function toDisplayFirstName(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 24) return 'Applicant';
+  return trimmed;
+}
+
 export default function ApplicantDashboard() {
   const { currentApplicant, allJobs, completeTask, uploadApplicantResume } = useAts();
   const jobById = (id: string) => allJobs.find((j) => j.id === id);
@@ -30,6 +36,7 @@ export default function ApplicantDashboard() {
   const [selectedResumeFile, setSelectedResumeFile] = useState<File | null>(null);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
   const resumeInputRef = useRef<HTMLInputElement | null>(null);
+  const displayFirstName = toDisplayFirstName(currentApplicant.firstName);
 
   const activeApplications = currentApplicant.applications.filter(
     (a) => a.stage !== 'hired' && a.stage !== 'rejected'
@@ -85,7 +92,7 @@ export default function ApplicantDashboard() {
             <span style={{ fontSize: 12, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>YOUR JOURNEY</span>
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
-            Welcome back, {currentApplicant.firstName}
+            Welcome back, {displayFirstName}
           </h1>
           <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
             {activeApplications.length} active quest{activeApplications.length !== 1 ? 's' : ''} · {currentApplicant.completedTasks.length} challenges completed

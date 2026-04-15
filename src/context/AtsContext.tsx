@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   ReactNode,
@@ -76,6 +77,8 @@ export function AtsProvider({ children }: { children: ReactNode }) {
   const hasAttemptedSeedRef = useRef(false);
 
   const atsState = useQuery(api.ats.getAtsState, {});
+  const authUser = useQuery(api.users.getCurrentUser, {});
+  const authUserResume = useQuery(api.users.getCurrentUserResume, {});
   const seedAtsData = useMutation(api.seed.seedAtsData);
   const createJobMutation = useMutation(api.ats.createJob);
   const updateJobMutation = useMutation(api.ats.updateJob);
@@ -87,26 +90,110 @@ export function AtsProvider({ children }: { children: ReactNode }) {
   const createResumeUploadUrlMutation = useMutation(api.ats.createResumeUploadUrl);
   const saveApplicantResumeMutation = useMutation(api.ats.saveApplicantResume);
 
-  const allJobs = atsState?.jobs ?? seedJobs;
-  const allApplicants = atsState?.applicants ?? seedApplicants;
-  const scorecardsList = atsState?.scorecards ?? seedScorecards;
+  const isSeedRecord = (clerkUserId: string | undefined) => !!clerkUserId && clerkUserId.startsWith('seed:');
+  const isRealSignedInUser = !!authUser && !isSeedRecord(authUser.clerkUserId);
+  const shouldUseSeedFallback = !isRealSignedInUser;
+
+  const allJobs = atsState?.jobs ?? (shouldUseSeedFallback ? seedJobs : []);
+  const allApplicants = atsState?.applicants ?? (shouldUseSeedFallback ? seedApplicants : []);
+  const scorecardsList = atsState?.scorecards ?? (shouldUseSeedFallback ? seedScorecards : []);
   const atsLoading = atsState === undefined;
-  const currentApplicant =
-    allApplicants.find((applicant) => applicant.id === currentApplicantId) ??
-    allApplicants[0] ??
-    seedApplicants[0];
+
+  const currentApplicant = useMemo(() => {
+    const authApplicantId =
+      isRealSignedInUser && authUser?.role === 'applicant' ? authUser.clerkUserId : undefined;
+    const matched =
+      (authApplicantId ? allApplicants.find((a) => a.id === authApplicantId) : undefined) ??
+      allApplicants.find((a) => a.id === currentApplicantId) ??
+      allApplicants[0];
+    if (matched) {
+      if (authApplicantId && authUserResume?.resumeUrl && !matched.resumeUrl) {
+        return {
+          ...matched,
+          resumeUrl: authUserResume.resumeUrl,
+          resumeFileName: authUserResume.resumeFileName ?? undefined,
+          resumeUploadedAt:
+            typeof authUserResume.resumeUploadedAt === 'number'
+              ? new Date(authUserResume.resumeUploadedAt).toISOString().split('T')[0]
+              : matched.resumeUploadedAt,
+        } satisfies Applicant;
+      }
+      return matched;
+    }
+
+    if (authApplicantId && authUser) {
+      const firstName = authUser.firstName ?? 'Applicant';
+      const lastName = authUser.lastName ?? '';
+      const avatar = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase() || 'U';
+      return {
+        id: authApplicantId,
+        firstName,
+        lastName,
+        email: authUser.email,
+        jobGoal: 'Find a role aligned to my strengths.',
+        level: 1,
+        xp: 0,
+        xpToNextLevel: 300,
+        completedTasks: [],
+        applications: [],
+        skills: [],
+        location: 'Remote',
+        experience: 0,
+        resumeSnippet: '',
+        resumeFileName: authUserResume?.resumeFileName ?? undefined,
+        resumeUrl: authUserResume?.resumeUrl ?? undefined,
+        resumeUploadedAt:
+          typeof authUserResume?.resumeUploadedAt === 'number'
+            ? new Date(authUserResume.resumeUploadedAt).toISOString().split('T')[0]
+            : undefined,
+        avatar,
+      } satisfies Applicant;
+    }
+
+    return seedApplicants[0];
+  }, [allApplicants, authUser, authUserResume, currentApplicantId, isRealSignedInUser]);
+
   const setCurrentApplicant = useCallback((applicant: Applicant) => {
     setCurrentApplicantId(applicant.id);
   }, []);
 
+  // Sync applicant ID for authenticated applicants
   useEffect(() => {
-    if (atsState === undefined || hasAttemptedSeedRef.current) {
-      return;
-    }
+    if (!authUser || authUser.role !== 'applicant' || isSeedRecord(authUser.clerkUserId)) return;
+    setCurrentApplicantId(authUser.clerkUserId);
+  }, [authUser]);
 
-    if (atsState.jobs.length > 0 || atsState.applicants.length > 0) {
-      return;
-    }
+  // Sync team member for authenticated non-applicant roles
+  useEffect(() => {
+    if (!authUser || isSeedRecord(authUser.clerkUserId)) return;
+    if (authUser.role === 'applicant') return;
+
+    const firstName = authUser.firstName ?? 'Team';
+    const lastName = authUser.lastName ?? 'Member';
+    const avatar = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase() || 'TM';
+    const sanitizedCompany = (authUser.companyName ?? 'my-company')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '')
+      .slice(0, 20);
+    const companyId = sanitizedCompany || 'my-company';
+
+    setCurrentTeamMember({
+      id: authUser.clerkUserId,
+      firstName,
+      lastName,
+      email: authUser.email,
+      team: authUser.role === 'hiring_manager' ? 'Leadership' : 'Interview Team',
+      role: authUser.role === 'hiring_manager' ? 'hiring_manager' : 'team_member',
+      companyId,
+      avatar,
+      guideArchetype: authUser.role === 'hiring_manager' ? 'The Keeper' : 'The Scout',
+    });
+  }, [authUser]);
+
+  // Seed data only for non-authenticated users
+  useEffect(() => {
+    if (atsState === undefined || hasAttemptedSeedRef.current || !shouldUseSeedFallback) return;
+    if (atsState.jobs.length > 0 || atsState.applicants.length > 0) return;
 
     hasAttemptedSeedRef.current = true;
     void (async () => {
@@ -117,11 +204,9 @@ export function AtsProvider({ children }: { children: ReactNode }) {
         setAtsError(error instanceof Error ? error.message : 'Failed to seed ATS data');
       }
     })();
-  }, [atsState, seedAtsData]);
+  }, [atsState, seedAtsData, shouldUseSeedFallback]);
 
-  const refetchAts = useCallback(async () => {
-    // Convex queries are realtime; no explicit fetch is required.
-  }, []);
+  const refetchAts = useCallback(async () => {}, []);
 
   const updateApplicationStage = async (
     applicantId: string,
@@ -130,11 +215,7 @@ export function AtsProvider({ children }: { children: ReactNode }) {
   ) => {
     setAtsError(null);
     try {
-      await updateApplicationMutation({
-        applicantId,
-        applicationId,
-        stage,
-      });
+      await updateApplicationMutation({ applicantId, applicationId, stage });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update application stage';
       setAtsError(message);
@@ -220,19 +301,13 @@ export function AtsProvider({ children }: { children: ReactNode }) {
       const uploadUrl = await createResumeUploadUrlMutation({});
       const uploadResult = await fetch(uploadUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': file.type || 'application/octet-stream',
-        },
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
         body: file,
       });
-      if (!uploadResult.ok) {
-        throw new Error('Upload failed');
-      }
+      if (!uploadResult.ok) throw new Error('Upload failed');
 
       const { storageId } = (await uploadResult.json()) as { storageId?: string };
-      if (!storageId) {
-        throw new Error('Missing storage ID from upload response');
-      }
+      if (!storageId) throw new Error('Missing storage ID from upload response');
 
       await saveApplicantResumeMutation({
         applicantId: currentApplicant.id,
@@ -254,11 +329,7 @@ export function AtsProvider({ children }: { children: ReactNode }) {
   ) => {
     setAtsError(null);
     try {
-      await updateApplicationMutation({
-        applicantId,
-        applicationId,
-        feedbackForApplicant: feedback,
-      });
+      await updateApplicationMutation({ applicantId, applicationId, feedbackForApplicant: feedback });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update applicant feedback';
       setAtsError(message);
@@ -274,12 +345,7 @@ export function AtsProvider({ children }: { children: ReactNode }) {
   ) => {
     setAtsError(null);
     try {
-      await assignInterviewerMutation({
-        applicantId,
-        applicationId,
-        interviewerId,
-        assigned,
-      });
+      await assignInterviewerMutation({ applicantId, applicationId, interviewerId, assigned });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update interviewer assignment';
       setAtsError(message);

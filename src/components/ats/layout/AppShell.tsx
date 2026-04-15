@@ -26,6 +26,7 @@ interface NavItem {
 
 const applicantNav: NavItem[] = [
   { label: 'My Journey', path: '/applicant', icon: <Map size={18} /> },
+  { label: 'Job Board', path: '/applicant/jobs', icon: <Briefcase size={18} /> },
   { label: 'Challenges', path: '/applicant/tasks', icon: <Swords size={18} /> },
   { label: 'Profile', path: '/applicant/profile', icon: <User size={18} /> },
 ];
@@ -56,18 +57,27 @@ const ROLE_LABELS: Record<ActiveRole, string> = {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useUser();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const role = roleFromPathname(pathname);
   const navItems = NAV_BY_ROLE[role];
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#0a0a14', color: '#f1f5f9' }}>
+      {/* Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30"
+          style={{ background: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className="flex flex-col transition-all duration-300 shrink-0"
+        className={`flex flex-col transition-transform duration-300 shrink-0 fixed z-40 h-full ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={{
-          width: sidebarOpen ? 240 : 64,
+          width: 240,
           background: '#0f0f1e',
           borderRight: '1px solid rgba(124,58,237,0.15)',
         }}
@@ -80,23 +90,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Zap size={18} color="white" />
           </div>
-          {sidebarOpen && (
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.02em' }}>QuestHire</div>
-              <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>ATS PLATFORM</div>
-            </div>
-          )}
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.02em' }}>QuestHire</div>
+            <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>ATS PLATFORM</div>
+          </div>
           <button
             className="ml-auto"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() => setSidebarOpen(false)}
             style={{ color: '#64748b' }}
           >
-            {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
+            <X size={16} />
           </button>
         </div>
 
         {/* User Info */}
-        {sidebarOpen && user && (
+        {user && (
           <div className="px-4 py-4 border-b" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
             <div className="flex items-center gap-3">
               {user.imageUrl ? (
@@ -134,18 +142,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.path}
                 href={item.path}
+                onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 rounded-lg transition-all duration-150"
                 style={{
-                  padding: sidebarOpen ? '9px 12px' : '9px',
-                  justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                  padding: '9px 12px',
                   background: isActive ? 'rgba(124,58,237,0.15)' : 'transparent',
                   color: isActive ? '#a78bfa' : '#64748b',
                   borderLeft: isActive ? '2px solid #7c3aed' : '2px solid transparent',
                 }}
               >
                 {item.icon}
-                {sidebarOpen && <span style={{ fontSize: 14, fontWeight: isActive ? 600 : 400 }}>{item.label}</span>}
-                {sidebarOpen && isActive && <ChevronRight size={14} className="ml-auto" />}
+                <span style={{ fontSize: 14, fontWeight: isActive ? 600 : 400 }}>{item.label}</span>
+                {isActive && <ChevronRight size={14} className="ml-auto" />}
               </Link>
             );
           })}
@@ -156,14 +164,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <SignOutButton redirectUrl="/">
             <button
               className="flex items-center gap-3 rounded-lg w-full transition-all"
-              style={{
-                padding: sidebarOpen ? '9px 12px' : '9px',
-                justifyContent: sidebarOpen ? 'flex-start' : 'center',
-                color: '#64748b',
-              }}
+              style={{ padding: '9px 12px', color: '#64748b' }}
             >
               <LogOut size={16} />
-              {sidebarOpen && <span style={{ fontSize: 13 }}>Sign out</span>}
+              <span style={{ fontSize: 13 }}>Sign out</span>
             </button>
           </SignOutButton>
         </div>
@@ -171,6 +175,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto" style={{ background: '#0a0a14' }}>
+        {!sidebarOpen && (
+          <div className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b" style={{ background: '#0f0f1e', borderColor: 'rgba(124,58,237,0.15)' }}>
+            <button onClick={() => setSidebarOpen(true)} style={{ color: '#94a3b8' }}>
+              <Menu size={20} />
+            </button>
+            <div
+              className="flex items-center justify-center rounded-lg shrink-0"
+              style={{ width: 28, height: 28, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}
+            >
+              <Zap size={14} color="white" />
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>QuestHire</span>
+          </div>
+        )}
         {children}
       </main>
     </div>

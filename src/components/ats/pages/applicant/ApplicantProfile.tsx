@@ -8,6 +8,29 @@ import { JourneyPath } from '@/components/ats/shared/JourneyPath';
 import { getTaskById, getCompanyById, stageStoryLabels } from '@/data/ats/mockData';
 import { User, MapPin, Briefcase, Star, Award, Upload, FileText } from 'lucide-react';
 
+function toDisplayEmail(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed.includes('@')) return null;
+  if (trimmed.length > 120) return null;
+  if (trimmed.endsWith('@users.clerk.local')) return null;
+  const localPart = trimmed.split('@')[0] ?? '';
+  if (localPart.length > 24) return null;
+  return trimmed;
+}
+
+function toDisplayName(value: string, fallback: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 24) return fallback;
+  return trimmed;
+}
+
+function toDisplayAvatar(avatar: string, firstName: string, lastName: string): string {
+  const trimmed = avatar.trim();
+  if (trimmed.length > 0 && trimmed.length <= 3) return trimmed;
+  const initials = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase();
+  return initials || 'U';
+}
+
 export default function ApplicantProfile() {
   const { currentApplicant, allJobs, uploadApplicantResume } = useAts();
   const jobById = (id: string) => allJobs.find((j) => j.id === id);
@@ -17,6 +40,10 @@ export default function ApplicantProfile() {
   const [isUploadingResume, setIsUploadingResume] = useState(false);
 
   const totalXP = a.completedTasks.reduce((s, ct) => s + ct.pointsEarned, 0);
+  const displayEmail = toDisplayEmail(a.email);
+  const displayFirstName = toDisplayName(a.firstName, 'Applicant');
+  const displayLastName = toDisplayName(a.lastName, '');
+  const displayAvatar = toDisplayAvatar(a.avatar, a.firstName, a.lastName);
 
   const handleResumeUpload = async () => {
     if (!selectedResumeFile) return;
@@ -39,7 +66,7 @@ export default function ApplicantProfile() {
           <span style={{ fontSize: 12, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>CAREER PROFILE</span>
         </div>
         <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
-          {a.firstName} {a.lastName}
+          {displayFirstName} {displayLastName}
         </h1>
         <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>{a.jobGoal}</p>
       </div>
@@ -52,11 +79,15 @@ export default function ApplicantProfile() {
               className="flex items-center justify-center rounded-full shrink-0 mx-auto sm:mx-0"
               style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#7c3aed,#a78bfa)', fontSize: 24, fontWeight: 800, color: 'white' }}
             >
-              {a.avatar}
+              {displayAvatar}
             </div>
             <div className="flex-1 min-w-0 text-center sm:text-left">
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f5f9' }}>{a.firstName} {a.lastName}</h2>
-              <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12 }}>{a.email}</p>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f5f9' }}>{displayFirstName} {displayLastName}</h2>
+              {displayEmail ? (
+                <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12 }}>{displayEmail}</p>
+              ) : (
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>Email hidden</p>
+              )}
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 sm:gap-6">
                 <div className="text-center">
                   <div style={{ fontSize: 20, fontWeight: 800, color: '#f59e0b' }}>{a.level}</div>

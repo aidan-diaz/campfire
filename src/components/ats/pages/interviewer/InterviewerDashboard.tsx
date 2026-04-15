@@ -1,7 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useQuery } from 'convex/react';
 import { useAts } from '@/context/AtsContext';
+import { api } from '../../../../../convex/_generated/api';
 import {
   getCompanyById, stageStoryLabels,
   allTasks,
@@ -12,12 +15,23 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
+function toDisplayName(value: string, fallback: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 24) return fallback;
+  return trimmed;
+}
+
 export default function InterviewerDashboard() {
   const { currentTeamMember, allJobs, allApplicants, scorecardsList } = useAts();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentUser = useQuery(api.users.getCurrentUser, {});
+  const [showSubmissionToast, setShowSubmissionToast] = useState(false);
   const jobById = (id: string) => allJobs.find((j) => j.id === id);
 
+  const displayFirstName = toDisplayName(currentUser?.firstName ?? currentTeamMember.firstName, 'Interviewer');
   const company = getCompanyById(currentTeamMember.companyId);
+  const displayCompanyName = currentUser?.companyName?.trim() || company?.name || 'Your Company';
   const myJobs = allJobs.filter((j) => j.companyId === currentTeamMember.companyId);
 
   // Find all applicants assigned to this interviewer
@@ -43,8 +57,34 @@ export default function InterviewerDashboard() {
 
   const completedScorecards = scorecardsList.filter((sc) => sc.interviewerId === currentTeamMember.id);
 
+  useEffect(() => {
+    if (searchParams.get('scorecard') !== 'submitted') return;
+    setShowSubmissionToast(true);
+    const timeout = window.setTimeout(() => {
+      setShowSubmissionToast(false);
+      router.replace('/interviewer');
+    }, 2200);
+    return () => window.clearTimeout(timeout);
+  }, [router, searchParams]);
+
   return (
     <div className="min-h-screen" style={{ background: '#0a0a14' }}>
+      {showSubmissionToast && (
+        <div className="fixed right-6 top-6 z-50">
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border px-4 py-3 shadow-lg"
+            style={{ background: 'rgba(16,185,129,0.12)', borderColor: 'rgba(16,185,129,0.35)' }}
+          >
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={14} style={{ color: '#10b981' }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#10b981' }}>Scorecard submitted</span>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="px-6 pt-8 pb-6 border-b" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
         <div className="flex items-start justify-between gap-4">
@@ -52,11 +92,11 @@ export default function InterviewerDashboard() {
             <div className="flex items-center gap-2 mb-1">
               <Shield size={16} style={{ color: company?.color || '#2563eb' }} />
               <span style={{ fontSize: 12, color: company?.color || '#2563eb', fontWeight: 600, letterSpacing: '0.08em' }}>
-                {company?.name?.toUpperCase()} · {roleLabel.toUpperCase()}
+                {displayCompanyName.toUpperCase()} · {roleLabel.toUpperCase()}
               </span>
             </div>
             <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
-              Welcome, {currentTeamMember.firstName}
+              Welcome, {displayFirstName}
             </h1>
             <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
               {currentTeamMember.team} · {currentTeamMember.guideArchetype} · {activeItems.length} active interview{activeItems.length !== 1 ? 's' : ''}

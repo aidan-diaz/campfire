@@ -15,6 +15,7 @@ export default defineSchema({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     avatar: v.optional(v.string()),
+    companyName: v.optional(v.string()),
     resumeStorageId: v.optional(v.id("_storage")),
     resumeFileName: v.optional(v.string()),
     resumeContentType: v.optional(v.string()),

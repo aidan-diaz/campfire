@@ -1,7 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useQuery } from 'convex/react';
 import { useAts } from '@/context/AtsContext';
+import { api } from '../../../../../convex/_generated/api';
 import { getCompanyById, stageLabels, ApplicationStage } from '@/data/ats/mockData';
 import {
   LayoutDashboard, Briefcase, Plus, TrendingUp, Users, Clock,
@@ -9,11 +11,20 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
+function toDisplayName(value: string, fallback: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 24) return fallback;
+  return trimmed;
+}
+
 export default function RecruiterDashboard() {
   const { currentTeamMember, allJobs, allApplicants } = useAts();
   const router = useRouter();
+  const currentUser = useQuery(api.users.getCurrentUser, {});
 
+  const displayFirstName = toDisplayName(currentUser?.firstName ?? currentTeamMember.firstName, 'Manager');
   const company = getCompanyById(currentTeamMember.companyId);
+  const displayCompanyName = currentUser?.companyName?.trim() || company?.name || 'Your Company';
   const myJobs = allJobs.filter((j) => j.companyId === currentTeamMember.companyId);
   const openJobs = myJobs.filter((j) => j.status === 'open');
   const draftJobs = myJobs.filter((j) => j.status === 'draft');
@@ -61,11 +72,11 @@ export default function RecruiterDashboard() {
             <div className="flex items-center gap-2 mb-1">
               <LayoutDashboard size={16} style={{ color: company?.color || '#7c3aed' }} />
               <span style={{ fontSize: 12, color: company?.color || '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>
-                {company?.name?.toUpperCase()} · {roleLabel.toUpperCase()}
+                {displayCompanyName.toUpperCase()} · {roleLabel.toUpperCase()}
               </span>
             </div>
             <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
-              Welcome, {currentTeamMember.firstName}
+              Welcome, {displayFirstName}
             </h1>
             <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
               {openJobs.length} open roles · {myApplicants.length} total candidates
