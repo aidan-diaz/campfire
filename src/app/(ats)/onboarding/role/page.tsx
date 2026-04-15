@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
@@ -25,6 +25,20 @@ function getRoleFromMetadata(user: ReturnType<typeof useUser>["user"]): Onboardi
 }
 
 export default function RoleOnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-full flex-1 items-center justify-center bg-zinc-50 px-4 py-16 dark:bg-black">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Loading your onboarding...</p>
+        </main>
+      }
+    >
+      <RoleOnboardingInner />
+    </Suspense>
+  );
+}
+
+function RoleOnboardingInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isNewSignUp = searchParams.get("new") === "1";
