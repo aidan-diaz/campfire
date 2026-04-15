@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
@@ -26,6 +26,8 @@ function getRoleFromMetadata(user: ReturnType<typeof useUser>["user"]): Onboardi
 
 export default function RoleOnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isNewSignUp = searchParams.get("new") === "1";
   const { isLoaded, isSignedIn, user } = useUser();
   const syncCurrentUser = useMutation(api.users.syncCurrentUser);
   const existingUser = useQuery(api.users.getCurrentUser, isLoaded && isSignedIn ? {} : "skip");
@@ -42,18 +44,21 @@ export default function RoleOnboardingPage() {
       return;
     }
 
-    // Redirect immediately if Clerk metadata already has a role — don't
-    // wait for the Convex query which may be blocked by token exchange.
+    // Fresh sign-ups always see the role picker — never auto-redirect.
+    if (isNewSignUp) {
+      return;
+    }
+
+    // Returning sign-ins: redirect immediately if role is already set.
     if (clerkRole) {
       router.replace(getRoleHomePath(clerkRole));
       return;
     }
 
-    // Fall back to Convex-stored role once the query resolves.
     if (existingUser !== undefined && existingRole) {
       router.replace(getRoleHomePath(existingRole));
     }
-  }, [clerkRole, existingRole, existingUser, isLoaded, isSignedIn, router]);
+  }, [clerkRole, existingRole, existingUser, isLoaded, isNewSignUp, isSignedIn, router]);
 
   const handleSelectRole = async (role: OnboardingRole) => {
     if (!user || isSaving) {

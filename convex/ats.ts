@@ -210,6 +210,22 @@ async function buildAtsState(ctx: QueryCtx): Promise<AtsState> {
     applicationsByApplicantId.set(application.applicantUserId, existing);
   }
 
+  const applicantResumeUrlByUserId = new Map<Id<"users">, string | null>(
+    await Promise.all(
+      usersDocs
+        .filter((user) => user.role === "applicant")
+        .map(async (user) => [user._id, user.resumeStorageId ? await ctx.storage.getUrl(user.resumeStorageId) : null] as const),
+    ),
+  );
+  const applicationResumeUrlById = new Map<Id<"applications">, string | null>(
+    await Promise.all(
+      applicationsDocs.map(async (application) => [
+        application._id,
+        application.resumeStorageId ? await ctx.storage.getUrl(application.resumeStorageId) : null,
+      ] as const),
+    ),
+  );
+
   const jobModels: Job[] = jobsDocs.map((jobDoc) => {
     const seedJob = seedJobs.find((job) => job.id === getSeedIdFromMetadata(jobDoc.metadata));
     const metadata = (jobDoc.metadata ?? {}) as Record<string, unknown>;
@@ -311,6 +327,9 @@ async function buildAtsState(ctx: QueryCtx): Promise<AtsState> {
             ((appDoc.metadata as { assignedInterviewerIds?: unknown } | undefined)?.assignedInterviewerIds as string[] | undefined) ?? [],
           feedbackForApplicant: appDoc.publicFeedback ?? undefined,
           source: appDoc.source ?? "Direct",
+          resumeFileName: appDoc.resumeFileName ?? undefined,
+          resumeUrl: applicationResumeUrlById.get(appDoc._id) ?? undefined,
+          resumeUploadedAt: appDoc.resumeUploadedAt ? toDateString(appDoc.resumeUploadedAt) : undefined,
         } satisfies Application;
       });
 
@@ -337,6 +356,9 @@ async function buildAtsState(ctx: QueryCtx): Promise<AtsState> {
         location: seedApplicant?.location ?? "Remote",
         experience: seedApplicant?.experience ?? 0,
         resumeSnippet: seedApplicant?.resumeSnippet ?? "",
+        resumeFileName: userDoc.resumeFileName ?? undefined,
+        resumeUrl: applicantResumeUrlByUserId.get(userDoc._id) ?? undefined,
+        resumeUploadedAt: userDoc.resumeUploadedAt ? toDateString(userDoc.resumeUploadedAt) : undefined,
         avatar: userDoc.avatar ?? seedApplicant?.avatar ?? toAvatar(userDoc.firstName, userDoc.lastName),
       } satisfies Applicant;
     });
@@ -496,6 +518,36 @@ export const updateJob = mutation({
   },
 });
 
+export const createResumeUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const saveApplicantResume = mutation({
+  args: {
+    applicantId: v.string(),
+    storageId: v.id("_storage"),
+    fileName: v.string(),
+    contentType: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const applicantUser = await resolveApplicantUser(ctx, args.applicantId);
+    const now = Date.now();
+
+    await ctx.db.patch(applicantUser._id, {
+      resumeStorageId: args.storageId,
+      resumeFileName: args.fileName,
+      resumeContentType: args.contentType,
+      resumeUploadedAt: now,
+      updatedAt: now,
+    });
+
+    return { ok: true };
+  },
+});
+
 export const applyToJob = mutation({
   args: {
     applicantId: v.string(),
@@ -525,6 +577,10 @@ export const applyToJob = mutation({
       jobId: job._id,
       stage: "applied",
       status: "applied",
+      resumeStorageId: applicantUser.resumeStorageId,
+      resumeFileName: applicantUser.resumeFileName,
+      resumeContentType: applicantUser.resumeContentType,
+      resumeUploadedAt: applicantUser.resumeUploadedAt,
       timeline: { dateApplied },
       source: args.source || "Direct",
       metadata: {

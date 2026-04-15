@@ -15,6 +15,10 @@ export default defineSchema({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     avatar: v.optional(v.string()),
+    resumeStorageId: v.optional(v.id("_storage")),
+    resumeFileName: v.optional(v.string()),
+    resumeContentType: v.optional(v.string()),
+    resumeUploadedAt: v.optional(v.number()),
     onboardingCompleted: v.boolean(),
     xpSummary: v.optional(
       v.object({
@@ -51,6 +55,10 @@ export default defineSchema({
     jobId: v.id("jobs"),
     stage: v.string(),
     status: v.optional(v.string()),
+    resumeStorageId: v.optional(v.id("_storage")),
+    resumeFileName: v.optional(v.string()),
+    resumeContentType: v.optional(v.string()),
+    resumeUploadedAt: v.optional(v.number()),
     timeline: v.optional(v.any()),
     source: v.optional(v.string()),
     publicFeedback: v.optional(v.string()),

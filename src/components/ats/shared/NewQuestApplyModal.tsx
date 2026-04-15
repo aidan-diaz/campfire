@@ -143,6 +143,14 @@ export function NewQuestApplyModal({ open, onClose, initialJobId = null }: NewQu
                   </p>
                 </div>
               )}
+              <div className="rounded-xl p-3" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                <p style={{ fontSize: 12, color: '#94a3b8' }}>
+                  <span style={{ color: '#34d399', fontWeight: 600 }}>Resume attached automatically: </span>
+                  {currentApplicant.resumeFileName
+                    ? `${currentApplicant.resumeFileName} will be included with this application.`
+                    : 'No saved resume yet. Upload one from your profile so future applications include it.'}
+                </p>
+              </div>
             </div>
           )}
 

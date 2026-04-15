@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAts } from '@/context/AtsContext';
-import { getCompanyById, ApplicationStage } from '@/data/ats/mockData';
+import { getCompanyById, stageStoryLabels, type Applicant, type Application } from '@/data/ats/mockData';
 import {
   Briefcase, Plus, Search, Users, Calendar, CheckCircle2,
-  Clock, Eye, MoreHorizontal, ChevronRight, Filter, FileText,
+  Eye, MoreHorizontal, ChevronRight, Filter, FileText,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -15,6 +15,7 @@ export default function RecruiterJobsList() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'draft' | 'closed'>('all');
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
   const company = getCompanyById(currentTeamMember.companyId);
   const myJobs = allJobs.filter((j) => j.companyId === currentTeamMember.companyId);
@@ -160,16 +161,19 @@ export default function RecruiterJobsList() {
             {/* Rows */}
             {filtered.map((job, i) => {
               const applicantCount = job.applicantIds.length;
-              const stageCount: Partial<Record<ApplicationStage, number>> = {};
-              allApplicants.forEach((a) => {
-                a.applications.forEach((app) => {
-                  if (app.jobId === job.id) {
-                    stageCount[app.stage] = (stageCount[app.stage] || 0) + 1;
+              const applicantsForJob: { applicant: Applicant; application: Application }[] = allApplicants.reduce(
+                (acc, applicant) => {
+                  const application = applicant.applications.find((candidateApplication) => candidateApplication.jobId === job.id);
+                  if (application) {
+                    acc.push({ applicant, application });
                   }
-                });
-              });
+                  return acc;
+                },
+                [] as { applicant: Applicant; application: Application }[],
+              );
 
               const sc = statusColors[job.status] || statusColors.closed;
+              const isExpanded = expandedJobId === job.id;
 
               return (
                 <motion.div
@@ -177,51 +181,98 @@ export default function RecruiterJobsList() {
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="grid px-5 py-4 border-b items-center cursor-pointer hover:bg-white/[0.02] transition-all"
-                  style={{
-                    gridTemplateColumns: '1fr 140px 100px 100px 120px 80px',
-                    borderColor: 'rgba(124,58,237,0.06)',
-                  }}
-                  onClick={() => router.push(`/recruiter/jobs/${job.id}`)}
                 >
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#f1f5f9' }}>{job.title}</div>
-                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>{job.overview.slice(0, 60)}...</div>
+                  <div
+                    className="grid px-5 py-4 border-b items-center cursor-pointer hover:bg-white/[0.02] transition-all"
+                    style={{
+                      gridTemplateColumns: '1fr 140px 100px 100px 120px 80px',
+                      borderColor: 'rgba(124,58,237,0.06)',
+                    }}
+                    onClick={() => router.push(`/recruiter/jobs/${job.id}`)}
+                  >
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#f1f5f9' }}>{job.title}</div>
+                      <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>{job.overview.slice(0, 60)}...</div>
+                    </div>
+                    <div style={{ fontSize: 12, color: '#94a3b8' }}>{job.team}</div>
+                    <div className="flex items-center gap-1.5">
+                      <Users size={12} style={{ color: '#64748b' }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: applicantCount > 0 ? '#f1f5f9' : '#475569' }}>
+                        {applicantCount}
+                      </span>
+                    </div>
+                    <div>
+                      <span
+                        className="px-2.5 py-1 rounded-full"
+                        style={{ fontSize: 11, fontWeight: 700, background: sc.bg, color: sc.color }}
+                      >
+                        {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Calendar size={11} style={{ color: '#475569' }} />
+                      <span style={{ fontSize: 11, color: '#64748b' }}>{job.postedDate}</span>
+                    </div>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); router.push(`/recruiter/jobs/${job.id}`); }}
+                        className="p-1.5 rounded-lg transition-all hover:opacity-80"
+                        style={{ background: `${company?.color || '#7c3aed'}15`, color: company?.accentColor || '#a78bfa' }}
+                      >
+                        <Eye size={13} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedJobId(isExpanded ? null : job.id);
+                        }}
+                        className="p-1.5 rounded-lg transition-all hover:opacity-80"
+                        style={{ background: 'rgba(255,255,255,0.04)', color: '#64748b' }}
+                      >
+                        {isExpanded ? <ChevronRight size={13} style={{ transform: 'rotate(90deg)' }} /> : <MoreHorizontal size={13} />}
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: '#94a3b8' }}>{job.team}</div>
-                  <div className="flex items-center gap-1.5">
-                    <Users size={12} style={{ color: '#64748b' }} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: applicantCount > 0 ? '#f1f5f9' : '#475569' }}>
-                      {applicantCount}
-                    </span>
-                  </div>
-                  <div>
-                    <span
-                      className="px-2.5 py-1 rounded-full"
-                      style={{ fontSize: 11, fontWeight: 700, background: sc.bg, color: sc.color }}
-                    >
-                      {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Calendar size={11} style={{ color: '#475569' }} />
-                    <span style={{ fontSize: 11, color: '#64748b' }}>{job.postedDate}</span>
-                  </div>
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); router.push(`/recruiter/jobs/${job.id}`); }}
-                      className="p-1.5 rounded-lg transition-all hover:opacity-80"
-                      style={{ background: `${company?.color || '#7c3aed'}15`, color: company?.accentColor || '#a78bfa' }}
-                    >
-                      <Eye size={13} />
-                    </button>
-                    <button
-                      className="p-1.5 rounded-lg transition-all hover:opacity-80"
-                      style={{ background: 'rgba(255,255,255,0.04)', color: '#64748b' }}
-                    >
-                      <MoreHorizontal size={13} />
-                    </button>
-                  </div>
+                  {isExpanded && (
+                    <div className="px-5 py-3 border-b" style={{ borderColor: 'rgba(124,58,237,0.06)', background: 'rgba(124,58,237,0.03)' }}>
+                      <div style={{ fontSize: 11, color: '#a78bfa', fontWeight: 600, marginBottom: 8 }}>
+                        Applicants ({applicantsForJob.length})
+                      </div>
+                      {applicantsForJob.length === 0 ? (
+                        <p style={{ fontSize: 12, color: '#64748b' }}>No applicants yet.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {applicantsForJob.map(({ applicant, application }) => (
+                            <div
+                              key={`${job.id}-${applicant.id}`}
+                              className="rounded-lg border px-3 py-2 flex items-center justify-between gap-3"
+                              style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}
+                            >
+                              <div>
+                                <div style={{ fontSize: 12, color: '#f1f5f9', fontWeight: 600 }}>
+                                  {applicant.firstName} {applicant.lastName}
+                                </div>
+                                <div style={{ fontSize: 11, color: '#64748b' }}>
+                                  {stageStoryLabels[application.stage]}
+                                </div>
+                              </div>
+                              <span
+                                className="px-2 py-1 rounded-full"
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: application.resumeUrl ? 'rgba(16,185,129,0.15)' : 'rgba(100,116,139,0.12)',
+                                  color: application.resumeUrl ? '#34d399' : '#94a3b8',
+                                }}
+                              >
+                                {application.resumeUrl ? 'Resume attached' : 'No resume'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               );
             })}

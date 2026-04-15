@@ -45,6 +45,9 @@ export interface Application {
   assignedInterviewerIds: string[];
   feedbackForApplicant?: string;
   source: string;
+  resumeFileName?: string;
+  resumeUrl?: string;
+  resumeUploadedAt?: string;
 }
 
 export interface Applicant {
@@ -62,6 +65,9 @@ export interface Applicant {
   location: string;
   experience: number;
   resumeSnippet: string;
+  resumeFileName?: string;
+  resumeUrl?: string;
+  resumeUploadedAt?: string;
   avatar: string;
 }
 

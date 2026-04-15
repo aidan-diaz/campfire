@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAts } from '@/context/AtsContext';
 import { XPBar } from '@/components/ats/shared/XPBar';
@@ -15,18 +15,21 @@ import {
 } from '@/data/ats/mockData';
 import {
   Map, MessageSquare, Trophy, Sparkles, ChevronRight,
-  Building2, Swords,
+  Building2, Swords, Upload, FileText,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function ApplicantDashboard() {
-  const { currentApplicant, allJobs, completeTask } = useAts();
+  const { currentApplicant, allJobs, completeTask, uploadApplicantResume } = useAts();
   const jobById = (id: string) => allJobs.find((j) => j.id === id);
   const router = useRouter();
   const [applyModal, setApplyModal] = useState(false);
   const [applyModalJobId, setApplyModalJobId] = useState<string | null>(null);
   const [taskCompleteModal, setTaskCompleteModal] = useState<Task | null>(null);
   const [journeyTab, setJourneyTab] = useState<'active' | 'strengthen'>('active');
+  const [selectedResumeFile, setSelectedResumeFile] = useState<File | null>(null);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const resumeInputRef = useRef<HTMLInputElement | null>(null);
 
   const activeApplications = currentApplicant.applications.filter(
     (a) => a.stage !== 'hired' && a.stage !== 'rejected'
@@ -48,6 +51,17 @@ export default function ApplicantDashboard() {
       setTaskCompleteModal(task);
     } catch {
       /* optional: surface error */
+    }
+  };
+
+  const handleResumeUpload = async (file: File) => {
+    setIsUploadingResume(true);
+    try {
+      await uploadApplicantResume(file);
+    } catch {
+      return;
+    } finally {
+      setIsUploadingResume(false);
     }
   };
 
@@ -81,6 +95,72 @@ export default function ApplicantDashboard() {
       </div>
 
       <div className="px-6 py-6 space-y-6">
+        {!currentApplicant.resumeUrl && (
+          <div
+            className="rounded-xl border p-4 space-y-3"
+            style={{ borderColor: 'rgba(124,58,237,0.2)', background: 'rgba(124,58,237,0.06)' }}
+          >
+            <div className="flex items-center gap-2">
+              <FileText size={14} style={{ color: '#a78bfa' }} />
+              <span style={{ fontSize: 13, color: '#f1f5f9', fontWeight: 700 }}>Add your resume</span>
+            </div>
+            <p style={{ fontSize: 12, color: '#94a3b8' }}>
+              Upload your resume once and we will attach it automatically every time you apply.
+            </p>
+            <input
+              ref={resumeInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                setSelectedResumeFile(file);
+                if (file) {
+                  void handleResumeUpload(file);
+                }
+              }}
+              style={{ display: 'none' }}
+            />
+            <button
+              type="button"
+              onClick={() => resumeInputRef.current?.click()}
+              disabled={isUploadingResume}
+              className="rounded-lg px-3 py-2 inline-flex items-center gap-2 transition-all hover:opacity-90 disabled:opacity-40"
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#a78bfa',
+                background: 'rgba(124,58,237,0.12)',
+                border: '1px solid rgba(124,58,237,0.25)',
+              }}
+            >
+              <Upload size={13} />
+              {isUploadingResume ? 'Uploading...' : 'Choose Resume'}
+            </button>
+            {selectedResumeFile && !isUploadingResume && (
+              <p style={{ fontSize: 11, color: '#94a3b8' }}>
+                Selected: {selectedResumeFile.name}
+              </p>
+            )}
+          </div>
+        )}
+
+        {currentApplicant.resumeUrl && (
+          <div
+            className="rounded-xl border p-3 flex items-center justify-between gap-3"
+            style={{ borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(16,185,129,0.06)' }}
+          >
+            <div className="flex items-center gap-2">
+              <FileText size={14} style={{ color: '#34d399' }} />
+              <span style={{ fontSize: 12, color: '#cbd5e1' }}>
+                Resume on file{currentApplicant.resumeFileName ? `: ${currentApplicant.resumeFileName}` : ''}
+              </span>
+            </div>
+            <a href={currentApplicant.resumeUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#34d399', fontWeight: 600 }}>
+              View
+            </a>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2">
           <button
             type="button"

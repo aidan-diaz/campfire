@@ -7,8 +7,11 @@ export default function SignUpPage() {
         routing="path"
         path="/sign-up"
         signInUrl="/sign-in"
-        fallbackRedirectUrl="/onboarding/role"
+        fallbackRedirectUrl="/onboarding/role?new=1"
       />
+      <p className="mt-4 max-w-md text-center text-xs text-zinc-600 dark:text-zinc-400">
+        Resume upload is optional during sign up. You can add or update your resume anytime from your My Journey dashboard.
+      </p>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
 import {
   Applicant,
   TeamMember,
@@ -47,6 +48,7 @@ interface AtsContextType {
   completeTask: (taskId: string, points: number, jobId?: string) => Promise<void>;
 
   applyToJob: (jobId: string, companyId: string, source: string) => Promise<void>;
+  uploadApplicantResume: (file: File) => Promise<void>;
 
   updateApplicationStage: (applicantId: string, applicationId: string, stage: ApplicationStage) => Promise<void>;
   assignInterviewerToApplication: (
@@ -82,6 +84,8 @@ export function AtsProvider({ children }: { children: ReactNode }) {
   const updateApplicationMutation = useMutation(api.ats.updateApplication);
   const assignInterviewerMutation = useMutation(api.ats.assignInterviewer);
   const completeTaskMutation = useMutation(api.ats.completeTask);
+  const createResumeUploadUrlMutation = useMutation(api.ats.createResumeUploadUrl);
+  const saveApplicantResumeMutation = useMutation(api.ats.saveApplicantResume);
 
   const allJobs = atsState?.jobs ?? seedJobs;
   const allApplicants = atsState?.applicants ?? seedApplicants;
@@ -210,6 +214,39 @@ export function AtsProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const uploadApplicantResume = async (file: File) => {
+    setAtsError(null);
+    try {
+      const uploadUrl = await createResumeUploadUrlMutation({});
+      const uploadResult = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type || 'application/octet-stream',
+        },
+        body: file,
+      });
+      if (!uploadResult.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const { storageId } = (await uploadResult.json()) as { storageId?: string };
+      if (!storageId) {
+        throw new Error('Missing storage ID from upload response');
+      }
+
+      await saveApplicantResumeMutation({
+        applicantId: currentApplicant.id,
+        storageId: storageId as Id<'_storage'>,
+        fileName: file.name,
+        contentType: file.type || undefined,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to upload resume';
+      setAtsError(message);
+      throw error;
+    }
+  };
+
   const updateApplicantFeedback = async (
     applicantId: string,
     applicationId: string,
@@ -267,6 +304,7 @@ export function AtsProvider({ children }: { children: ReactNode }) {
         updateJob,
         completeTask,
         applyToJob,
+        uploadApplicantResume,
         updateApplicationStage,
         assignInterviewerToApplication,
         allApplicants,

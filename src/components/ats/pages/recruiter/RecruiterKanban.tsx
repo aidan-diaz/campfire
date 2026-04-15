@@ -11,7 +11,7 @@ import {
 import {
   ChevronLeft, Users, Star, Sparkles, User, MessageSquare,
   CheckCircle2, ChevronDown, ChevronUp, ArrowRight, X, Filter,
-  Swords, Clock, Award, Search,
+  Swords, Clock, Award, Search, FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -411,6 +411,8 @@ function CandidatePanel({
 
   const sc = stageColors[application.stage] || stageColors.applied;
   const guides = application.assignedInterviewerIds.map(getTeamMemberById).filter(Boolean);
+  const resumeUrl = application.resumeUrl ?? applicant.resumeUrl;
+  const resumeFileName = application.resumeFileName ?? applicant.resumeFileName;
   const availableInterviewers = teamMembers.filter(
     (member) =>
       member.companyId === company.id &&
@@ -507,6 +509,22 @@ function CandidatePanel({
             <div className="rounded-xl border p-3" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
               <div style={{ fontSize: 10, color: '#64748b', marginBottom: 4 }}>RESUME SUMMARY</div>
               <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6, fontStyle: 'italic' }}>{applicant.resumeSnippet}</p>
+              <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(124,58,237,0.12)' }}>
+                {resumeUrl ? (
+                  <a
+                    href={resumeUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 transition-all hover:opacity-90"
+                    style={{ fontSize: 11, color: '#a78bfa', background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}
+                  >
+                    <FileText size={12} />
+                    {resumeFileName ?? 'Open attached resume'}
+                  </a>
+                ) : (
+                  <span style={{ fontSize: 11, color: '#64748b' }}>No resume has been attached to this application yet.</span>
+                )}
+              </div>
             </div>
 
             {/* Skills */}

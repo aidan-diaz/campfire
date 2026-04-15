@@ -6,15 +6,30 @@ import { XPBar } from '@/components/ats/shared/XPBar';
 import { TaskCard } from '@/components/ats/shared/TaskCard';
 import { JourneyPath } from '@/components/ats/shared/JourneyPath';
 import { getTaskById, getCompanyById, stageStoryLabels } from '@/data/ats/mockData';
-import { User, MapPin, Briefcase, Star, Award } from 'lucide-react';
+import { User, MapPin, Briefcase, Star, Award, Upload, FileText } from 'lucide-react';
 
 export default function ApplicantProfile() {
-  const { currentApplicant, allJobs } = useAts();
+  const { currentApplicant, allJobs, uploadApplicantResume } = useAts();
   const jobById = (id: string) => allJobs.find((j) => j.id === id);
   const a = currentApplicant;
   const [profileTab, setProfileTab] = useState<'quest' | 'challenges'>('quest');
+  const [selectedResumeFile, setSelectedResumeFile] = useState<File | null>(null);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
 
   const totalXP = a.completedTasks.reduce((s, ct) => s + ct.pointsEarned, 0);
+
+  const handleResumeUpload = async () => {
+    if (!selectedResumeFile) return;
+    setIsUploadingResume(true);
+    try {
+      await uploadApplicantResume(selectedResumeFile);
+      setSelectedResumeFile(null);
+    } catch {
+      return;
+    } finally {
+      setIsUploadingResume(false);
+    }
+  };
 
   return (
     <div className="min-h-screen" style={{ background: '#0a0a14' }}>
@@ -96,9 +111,50 @@ export default function ApplicantProfile() {
           </div>
         </div>
 
-        <div className="rounded-xl border p-4 w-full" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-          <h4 style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', marginBottom: 8 }}>Resume Summary</h4>
-          <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6, fontStyle: 'italic' }}>{a.resumeSnippet}</p>
+        <div className="rounded-xl border p-4 w-full space-y-4" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
+          <div>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', marginBottom: 8 }}>Resume Summary</h4>
+            <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6, fontStyle: 'italic' }}>{a.resumeSnippet}</p>
+          </div>
+          <div className="rounded-lg border p-3 space-y-2" style={{ borderColor: 'rgba(124,58,237,0.15)', background: 'rgba(124,58,237,0.05)' }}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <FileText size={14} style={{ color: '#a78bfa' }} />
+                <span style={{ fontSize: 12, color: '#cbd5e1', fontWeight: 600 }}>Saved Resume</span>
+              </div>
+              {a.resumeUrl ? (
+                <a
+                  href={a.resumeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ fontSize: 11, color: '#a78bfa', fontWeight: 600 }}
+                >
+                  View current
+                </a>
+              ) : (
+                <span style={{ fontSize: 11, color: '#64748b' }}>No resume uploaded</span>
+              )}
+            </div>
+            <p style={{ fontSize: 11, color: '#94a3b8' }}>
+              Upload a resume once and it will automatically attach to any new job applications.
+            </p>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={(event) => setSelectedResumeFile(event.target.files?.[0] ?? null)}
+              style={{ fontSize: 12, color: '#94a3b8', width: '100%' }}
+            />
+            <button
+              type="button"
+              onClick={() => void handleResumeUpload()}
+              disabled={!selectedResumeFile || isUploadingResume}
+              className="rounded-lg px-3 py-2 flex items-center gap-2 transition-all hover:opacity-90 disabled:opacity-40"
+              style={{ fontSize: 12, fontWeight: 600, color: '#a78bfa', background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}
+            >
+              <Upload size={13} />
+              {isUploadingResume ? 'Uploading...' : 'Upload Resume'}
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2 pt-2">
