@@ -26,11 +26,15 @@ export function NewQuestApplyModal({ open, onClose, initialJobId = null }: NewQu
   );
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+
+    const frame = requestAnimationFrame(() => {
       setApplyStep(1);
       setSelectedJob(initialJobId ?? null);
       setSource('');
-    }
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, [open, initialJobId]);
 
   const handleClose = () => {

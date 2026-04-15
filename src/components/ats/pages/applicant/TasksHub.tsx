@@ -173,7 +173,7 @@ export default function TasksHub() {
           <div className="text-center py-16">
             <CheckCircle2 size={40} style={{ color: '#10b981', margin: '0 auto 12px' }} />
             <p style={{ fontSize: 16, fontWeight: 700, color: '#f1f5f9' }}>All challenges complete!</p>
-            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>You've conquered every quest in this category.</p>
+            <p style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>You&apos;ve conquered every quest in this category.</p>
           </div>
         ) : (
           <>

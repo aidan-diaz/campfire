@@ -274,7 +274,7 @@ export default function InterviewerDashboard() {
         <div className="rounded-xl border p-5" style={{ borderColor: `${company?.color || '#2563eb'}20`, background: `${company?.color || '#2563eb'}05` }}>
           <div className="flex items-center gap-3 mb-3">
             <Scroll size={18} style={{ color: company?.color || '#60a5fa' }} />
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>The Guide's Creed</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>The Guide&apos;s Creed</h3>
           </div>
           <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.7 }}>
             In the QuestHire journey, every candidate starts a new adventure when they apply. As <span style={{ color: company?.color || '#60a5fa', fontWeight: 600 }}>{currentTeamMember.guideArchetype}</span>, you play a crucial role — your honest, constructive feedback shapes their path forward. 

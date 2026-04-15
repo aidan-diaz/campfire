@@ -5,9 +5,12 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from 'react';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import {
   Applicant,
   TeamMember,
@@ -21,15 +24,6 @@ import {
 } from '@/data/ats/mockData';
 
 export type Persona = 'applicant' | 'recruiter' | 'interviewer' | null;
-
-async function parseJson(res: Response) {
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = typeof (data as { error?: string }).error === 'string' ? (data as { error: string }).error : res.statusText;
-    throw new Error(msg || `Request failed (${res.status})`);
-  }
-  return data;
-}
 
 interface AtsContextType {
   persona: Persona;
@@ -55,6 +49,12 @@ interface AtsContextType {
   applyToJob: (jobId: string, companyId: string, source: string) => Promise<void>;
 
   updateApplicationStage: (applicantId: string, applicationId: string, stage: ApplicationStage) => Promise<void>;
+  assignInterviewerToApplication: (
+    applicantId: string,
+    applicationId: string,
+    interviewerId: string,
+    assigned: boolean,
+  ) => Promise<void>;
 
   allApplicants: Applicant[];
   updateApplicantFeedback: (applicantId: string, applicationId: string, feedback: string) => Promise<void>;
@@ -68,63 +68,74 @@ const AtsStateContext = createContext<AtsContextType | null>(null);
 
 export function AtsProvider({ children }: { children: ReactNode }) {
   const [persona, setPersona] = useState<Persona>(null);
-  const [currentApplicant, setCurrentApplicant] = useState<Applicant>(seedApplicants[0]);
+  const [currentApplicantId, setCurrentApplicantId] = useState<string>(seedApplicants[0].id);
   const [currentTeamMember, setCurrentTeamMember] = useState<TeamMember>(teamMembers[1]);
-  const [allJobs, setAllJobs] = useState<Job[]>(seedJobs);
-  const [allApplicants, setAllApplicants] = useState<Applicant[]>(seedApplicants);
-  const [scorecardsList, setScorecardsList] = useState<ScoreCard[]>(seedScorecards);
-  const [atsLoading, setAtsLoading] = useState(true);
   const [atsError, setAtsError] = useState<string | null>(null);
+  const hasAttemptedSeedRef = useRef(false);
 
-  const refetchAts = useCallback(async () => {
-    const res = await fetch('/api/ats/state', { credentials: 'include' });
-    const data = await parseJson(res) as {
-      jobs: Job[];
-      applicants: Applicant[];
-      scorecards: ScoreCard[];
-    };
-    setAllJobs(data.jobs);
-    setAllApplicants(data.applicants);
-    setScorecardsList(data.scorecards);
+  const atsState = useQuery(api.ats.getAtsState, {});
+  const seedAtsData = useMutation(api.seed.seedAtsData);
+  const createJobMutation = useMutation(api.ats.createJob);
+  const updateJobMutation = useMutation(api.ats.updateJob);
+  const addScorecardMutation = useMutation(api.ats.addScorecard);
+  const applyToJobMutation = useMutation(api.ats.applyToJob);
+  const updateApplicationMutation = useMutation(api.ats.updateApplication);
+  const assignInterviewerMutation = useMutation(api.ats.assignInterviewer);
+  const completeTaskMutation = useMutation(api.ats.completeTask);
+
+  const allJobs = atsState?.jobs ?? seedJobs;
+  const allApplicants = atsState?.applicants ?? seedApplicants;
+  const scorecardsList = atsState?.scorecards ?? seedScorecards;
+  const atsLoading = atsState === undefined;
+  const currentApplicant =
+    allApplicants.find((applicant) => applicant.id === currentApplicantId) ??
+    allApplicants[0] ??
+    seedApplicants[0];
+  const setCurrentApplicant = useCallback((applicant: Applicant) => {
+    setCurrentApplicantId(applicant.id);
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
+    if (atsState === undefined || hasAttemptedSeedRef.current) {
+      return;
+    }
+
+    if (atsState.jobs.length > 0 || atsState.applicants.length > 0) {
+      return;
+    }
+
+    hasAttemptedSeedRef.current = true;
+    void (async () => {
       try {
         setAtsError(null);
-        await refetchAts();
-      } catch (e) {
-        if (!cancelled) {
-          setAtsError(e instanceof Error ? e.message : 'Failed to load ATS data');
-        }
-      } finally {
-        if (!cancelled) setAtsLoading(false);
+        await seedAtsData({});
+      } catch (error) {
+        setAtsError(error instanceof Error ? error.message : 'Failed to seed ATS data');
       }
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, [refetchAts]);
+  }, [atsState, seedAtsData]);
 
-  useEffect(() => {
-    if (allApplicants.length === 0) return;
-    setCurrentApplicant((prev) => allApplicants.find((a) => a.id === prev.id) ?? allApplicants[0]);
-  }, [allApplicants]);
+  const refetchAts = useCallback(async () => {
+    // Convex queries are realtime; no explicit fetch is required.
+  }, []);
 
   const updateApplicationStage = async (
     applicantId: string,
     applicationId: string,
     stage: ApplicationStage,
   ) => {
-    const res = await fetch(`/api/ats/applicants/${applicantId}/applications/${applicationId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ stage }),
-    });
-    await parseJson(res);
-    await refetchAts();
+    setAtsError(null);
+    try {
+      await updateApplicationMutation({
+        applicantId,
+        applicationId,
+        stage,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update application stage';
+      setAtsError(message);
+      throw error;
+    }
   };
 
   const updateJobApplicants = async (jobId: string, applicantId: string, stage: ApplicationStage) => {
@@ -135,58 +146,68 @@ export function AtsProvider({ children }: { children: ReactNode }) {
   };
 
   const addScorecard = async (sc: ScoreCard) => {
-    const res = await fetch('/api/ats/scorecards', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(sc),
-    });
-    await parseJson(res);
-    await refetchAts();
+    setAtsError(null);
+    try {
+      await addScorecardMutation({ scorecard: sc });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to add scorecard';
+      setAtsError(message);
+      throw error;
+    }
   };
 
   const createJob = async (job: Job) => {
-    const res = await fetch('/api/ats/jobs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(job),
-    });
-    await parseJson(res);
-    await refetchAts();
+    setAtsError(null);
+    try {
+      await createJobMutation({ job });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create job';
+      setAtsError(message);
+      throw error;
+    }
   };
 
   const updateJob = async (job: Job) => {
-    const res = await fetch(`/api/ats/jobs/${job.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(job),
-    });
-    await parseJson(res);
-    await refetchAts();
+    setAtsError(null);
+    try {
+      await updateJobMutation({ job });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update job';
+      setAtsError(message);
+      throw error;
+    }
   };
 
   const completeTask = async (taskId: string, points: number, jobId?: string) => {
-    const res = await fetch(`/api/ats/applicants/${currentApplicant.id}/complete-task`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ taskId, points, jobId }),
-    });
-    await parseJson(res);
-    await refetchAts();
+    setAtsError(null);
+    try {
+      await completeTaskMutation({
+        applicantId: currentApplicant.id,
+        taskId,
+        points,
+        ...(jobId ? { jobId } : {}),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to complete task';
+      setAtsError(message);
+      throw error;
+    }
   };
 
   const applyToJob = async (jobId: string, companyId: string, source: string) => {
-    const res = await fetch(`/api/ats/applicants/${currentApplicant.id}/apply`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ jobId, companyId, source }),
-    });
-    await parseJson(res);
-    await refetchAts();
+    setAtsError(null);
+    try {
+      await applyToJobMutation({
+        applicantId: currentApplicant.id,
+        jobId,
+        companyId,
+        source,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to apply to job';
+      setAtsError(message);
+      throw error;
+    }
   };
 
   const updateApplicantFeedback = async (
@@ -194,14 +215,39 @@ export function AtsProvider({ children }: { children: ReactNode }) {
     applicationId: string,
     feedback: string,
   ) => {
-    const res = await fetch(`/api/ats/applicants/${applicantId}/applications/${applicationId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ feedbackForApplicant: feedback }),
-    });
-    await parseJson(res);
-    await refetchAts();
+    setAtsError(null);
+    try {
+      await updateApplicationMutation({
+        applicantId,
+        applicationId,
+        feedbackForApplicant: feedback,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update applicant feedback';
+      setAtsError(message);
+      throw error;
+    }
+  };
+
+  const assignInterviewerToApplication = async (
+    applicantId: string,
+    applicationId: string,
+    interviewerId: string,
+    assigned: boolean,
+  ) => {
+    setAtsError(null);
+    try {
+      await assignInterviewerMutation({
+        applicantId,
+        applicationId,
+        interviewerId,
+        assigned,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update interviewer assignment';
+      setAtsError(message);
+      throw error;
+    }
   };
 
   return (
@@ -222,6 +268,7 @@ export function AtsProvider({ children }: { children: ReactNode }) {
         completeTask,
         applyToJob,
         updateApplicationStage,
+        assignInterviewerToApplication,
         allApplicants,
         updateApplicantFeedback,
         atsLoading,

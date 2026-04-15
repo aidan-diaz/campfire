@@ -2,13 +2,21 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAts } from '@/context/AtsContext';
+import { usePathname } from 'next/navigation';
+import { SignOutButton, useUser } from '@clerk/nextjs';
 import {
   LayoutDashboard, Swords, User, BarChart3, Briefcase, Plus,
-  Users, ChevronRight, LogOut, Menu, X, Star, Zap, Map
+  Users, ChevronRight, LogOut, Menu, X, Zap, Map
 } from 'lucide-react';
-import { getCompanyById } from '@/data/ats/mockData';
+
+type ActiveRole = 'applicant' | 'recruiter' | 'interviewer';
+
+function roleFromPathname(pathname: string): ActiveRole {
+  if (pathname.startsWith('/applicant')) return 'applicant';
+  if (pathname.startsWith('/recruiter')) return 'recruiter';
+  if (pathname.startsWith('/interviewer')) return 'interviewer';
+  return 'applicant';
+}
 
 interface NavItem {
   label: string;
@@ -16,37 +24,42 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
+const applicantNav: NavItem[] = [
+  { label: 'My Journey', path: '/applicant', icon: <Map size={18} /> },
+  { label: 'Challenges', path: '/applicant/tasks', icon: <Swords size={18} /> },
+  { label: 'Profile', path: '/applicant/profile', icon: <User size={18} /> },
+];
+
+const recruiterNav: NavItem[] = [
+  { label: 'Dashboard', path: '/recruiter', icon: <LayoutDashboard size={18} /> },
+  { label: 'Jobs', path: '/recruiter/jobs', icon: <Briefcase size={18} /> },
+  { label: 'Post a Job', path: '/recruiter/jobs/new', icon: <Plus size={18} /> },
+  { label: 'Analytics', path: '/recruiter/analytics', icon: <BarChart3 size={18} /> },
+];
+
+const interviewerNav: NavItem[] = [
+  { label: 'My Interviews', path: '/interviewer', icon: <Users size={18} /> },
+];
+
+const NAV_BY_ROLE: Record<ActiveRole, NavItem[]> = {
+  applicant: applicantNav,
+  recruiter: recruiterNav,
+  interviewer: interviewerNav,
+};
+
+const ROLE_LABELS: Record<ActiveRole, string> = {
+  applicant: 'Applicant',
+  recruiter: 'Hiring Manager',
+  interviewer: 'Interviewer',
+};
+
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { persona, currentApplicant, currentTeamMember, setPersona } = useAts();
   const pathname = usePathname();
-  const router = useRouter();
+  const { user } = useUser();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const applicantNav: NavItem[] = [
-    { label: 'My Journey', path: '/applicant', icon: <Map size={18} /> },
-    { label: 'Challenges', path: '/applicant/tasks', icon: <Swords size={18} /> },
-    { label: 'Profile', path: '/applicant/profile', icon: <User size={18} /> },
-  ];
-
-  const recruiterNav: NavItem[] = [
-    { label: 'Dashboard', path: '/recruiter', icon: <LayoutDashboard size={18} /> },
-    { label: 'Jobs', path: '/recruiter/jobs', icon: <Briefcase size={18} /> },
-    { label: 'Post a Job', path: '/recruiter/jobs/new', icon: <Plus size={18} /> },
-    { label: 'Analytics', path: '/recruiter/analytics', icon: <BarChart3 size={18} /> },
-  ];
-
-  const interviewerNav: NavItem[] = [
-    { label: 'My Interviews', path: '/interviewer', icon: <Users size={18} /> },
-  ];
-
-  const navItems = persona === 'applicant' ? applicantNav : persona === 'recruiter' ? recruiterNav : interviewerNav;
-
-  const handleLogout = () => {
-    setPersona(null);
-    router.push('/');
-  };
-
-  const company = persona !== 'applicant' ? getCompanyById(currentTeamMember.companyId) : null;
+  const role = roleFromPathname(pathname);
+  const navItems = NAV_BY_ROLE[role];
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#0a0a14', color: '#f1f5f9' }}>
@@ -83,44 +96,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* User Info */}
-        {sidebarOpen && (
+        {sidebarOpen && user && (
           <div className="px-4 py-4 border-b" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
-            {persona === 'applicant' ? (
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
+              {user.imageUrl ? (
+                <img
+                  src={user.imageUrl}
+                  alt=""
+                  className="rounded-full shrink-0"
+                  style={{ width: 36, height: 36 }}
+                />
+              ) : (
                 <div
                   className="flex items-center justify-center rounded-full text-xs shrink-0"
                   style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#7c3aed,#a78bfa)', color: 'white', fontWeight: 700 }}
                 >
-                  {currentApplicant.avatar}
+                  {(user.firstName?.[0] ?? '').toUpperCase()}
                 </div>
-                <div className="min-w-0">
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9' }}>
-                    {currentApplicant.firstName} {currentApplicant.lastName}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Star size={10} style={{ color: '#f59e0b' }} fill="#f59e0b" />
-                    <span style={{ fontSize: 11, color: '#f59e0b' }}>Level {currentApplicant.level}</span>
-                  </div>
+              )}
+              <div className="min-w-0">
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {user.firstName} {user.lastName}
                 </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center rounded-full text-xs shrink-0"
-                  style={{ width: 36, height: 36, background: company ? `linear-gradient(135deg,${company.color},${company.accentColor})` : '#333', color: 'white', fontWeight: 700 }}
-                >
-                  {currentTeamMember.avatar}
-                </div>
-                <div className="min-w-0">
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {currentTeamMember.firstName} {currentTeamMember.lastName}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {currentTeamMember.role === 'hiring_manager' ? 'Hiring Manager' : currentTeamMember.role === 'recruiter' ? 'Recruiter' : 'Team Member'} · {company?.name}
-                  </div>
+                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                  {ROLE_LABELS[role]}
                 </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -149,20 +151,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Persona Switcher & Logout */}
+        {/* Sign Out */}
         <div className="p-2 border-t space-y-1" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 rounded-lg w-full transition-all"
-            style={{
-              padding: sidebarOpen ? '9px 12px' : '9px',
-              justifyContent: sidebarOpen ? 'flex-start' : 'center',
-              color: '#64748b',
-            }}
-          >
-            <LogOut size={16} />
-            {sidebarOpen && <span style={{ fontSize: 13 }}>Switch Persona</span>}
-          </button>
+          <SignOutButton redirectUrl="/">
+            <button
+              className="flex items-center gap-3 rounded-lg w-full transition-all"
+              style={{
+                padding: sidebarOpen ? '9px 12px' : '9px',
+                justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                color: '#64748b',
+              }}
+            >
+              <LogOut size={16} />
+              {sidebarOpen && <span style={{ fontSize: 13 }}>Sign out</span>}
+            </button>
+          </SignOutButton>
         </div>
       </aside>
 

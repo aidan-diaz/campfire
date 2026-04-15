@@ -32,14 +32,21 @@ export default function Landing() {
 
   const handleTeamMemberSelect = (id: string) => {
     const m = teamMembers.find((x) => x.id === id);
-    if (m) setCurrentTeamMember(m);
-    if (selectedRole) setPersona(selectedRole);
-    if (selectedRole === 'recruiter') router.push('/recruiter');
-    else router.push('/interviewer');
+    if (!m) {
+      return;
+    }
+
+    setCurrentTeamMember(m);
+
+    const personaForMember = m.role === 'recruiter' || m.role === 'hiring_manager' ? 'recruiter' : 'interviewer';
+    setPersona(personaForMember);
+    router.push(personaForMember === 'recruiter' ? '/recruiter' : '/interviewer');
   };
 
   const filteredTeamMembers = teamMembers.filter((m) =>
-    selectedRole === 'recruiter' ? m.role === 'recruiter' || m.role === 'hiring_manager' : m.role !== 'recruiter'
+    selectedRole === 'recruiter'
+      ? m.role === 'recruiter' || m.role === 'hiring_manager'
+      : m.role === 'team_member'
   );
 
   const personas = [

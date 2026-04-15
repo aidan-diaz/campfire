@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAts } from '@/context/AtsContext';
 import {
-  getCompanyById, getTeamMemberById, allTasks,
+  getCompanyById, getTeamMemberById, allTasks, teamMembers,
   stageLabels, stageStoryLabels, ApplicationStage, stageOrder,
   Applicant, Application,
 } from '@/data/ats/mockData';
@@ -31,7 +31,14 @@ export default function RecruiterKanban() {
   const params = useParams();
   const jobId = typeof params.jobId === 'string' ? params.jobId : Array.isArray(params.jobId) ? params.jobId[0] : undefined;
   const router = useRouter();
-  const { allJobs, allApplicants, updateApplicationStage, updateApplicantFeedback, currentTeamMember } = useAts();
+  const {
+    allJobs,
+    allApplicants,
+    updateApplicationStage,
+    updateApplicantFeedback,
+    assignInterviewerToApplication,
+    currentTeamMember,
+  } = useAts();
 
   const job = allJobs.find((j) => j.id === jobId);
   const company = job ? getCompanyById(job.companyId) : null;
@@ -263,9 +270,32 @@ export default function RecruiterKanban() {
                 onAdvance={() => handleAdvance(selectedCard.applicant, selectedCard.application)}
                 onReject={() => handleReject(selectedCard.applicant, selectedCard.application)}
                 onClose={() => setSelectedCard(null)}
-                onAssignInterviewer={(interviewerId) => {
-                  // Assign interviewer - in a real app this would update state
-                  console.log('Assign', interviewerId);
+                onAssignInterviewer={async (interviewerId, assigned) => {
+                  try {
+                    await assignInterviewerToApplication(
+                      selectedCard.applicant.id,
+                      selectedCard.application.id,
+                      interviewerId,
+                      assigned
+                    );
+                  } catch {
+                    return;
+                  }
+
+                  // Keep the panel responsive immediately while Convex pushes realtime updates.
+                  setSelectedCard((prev) => {
+                    if (!prev) return prev;
+                    const currentIds = new Set(prev.application.assignedInterviewerIds);
+                    if (assigned) currentIds.add(interviewerId);
+                    else currentIds.delete(interviewerId);
+                    return {
+                      ...prev,
+                      application: {
+                        ...prev.application,
+                        assignedInterviewerIds: Array.from(currentIds),
+                      },
+                    };
+                  });
                 }}
               />
             </motion.div>
@@ -359,7 +389,7 @@ function KanbanCard({
 function CandidatePanel({
   applicant, application, job, company,
   feedbackDraft, setFeedbackDraft, feedbackSaved,
-  onSaveFeedback, onAdvance, onReject, onClose,
+  onSaveFeedback, onAdvance, onReject, onClose, onAssignInterviewer,
 }: {
   applicant: Applicant;
   application: Application;
@@ -372,14 +402,21 @@ function CandidatePanel({
   onAdvance: () => void;
   onReject: () => void;
   onClose: () => void;
-  onAssignInterviewer: (id: string) => void;
+  onAssignInterviewer: (id: string, assigned: boolean) => Promise<void>;
 }) {
   const [tab, setTab] = useState<'overview' | 'tasks' | 'feedback'>('overview');
+  const [selectedInterviewerId, setSelectedInterviewerId] = useState('');
   const isTerminal = application.stage === 'hired' || application.stage === 'rejected';
   const canAdvance = !isTerminal && application.stage !== 'offered';
 
   const sc = stageColors[application.stage] || stageColors.applied;
   const guides = application.assignedInterviewerIds.map(getTeamMemberById).filter(Boolean);
+  const availableInterviewers = teamMembers.filter(
+    (member) =>
+      member.companyId === company.id &&
+      (member.role === 'team_member' || member.role === 'recruiter')
+  );
+  const effectiveSelectedInterviewerId = selectedInterviewerId || availableInterviewers[0]?.id || '';
 
   const completedTaskDetails = applicant.completedTasks.map((ct) => {
     const t = allTasks.find((task) => task.id === ct.taskId);
@@ -505,11 +542,53 @@ function CandidatePanel({
                         <div style={{ fontSize: 12, fontWeight: 600, color: '#f1f5f9' }}>{g.firstName} {g.lastName}</div>
                         <div style={{ fontSize: 10, color: '#64748b' }}>{g.guideArchetype} · {g.team}</div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => void onAssignInterviewer(g.id, false)}
+                        className="ml-auto rounded-lg px-2 py-1 transition-all hover:opacity-80"
+                        style={{ fontSize: 10, color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+                      >
+                        Unassign
+                      </button>
                     </div>
                   ))}
                 </div>
               </div>
             )}
+            <div className="rounded-xl border p-3" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
+              <div style={{ fontSize: 10, color: '#64748b', marginBottom: 8 }}>ASSIGN INTERVIEWER</div>
+              <div className="flex items-center gap-2">
+                <select
+                  style={{
+                    flex: 1,
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(124,58,237,0.15)',
+                    borderRadius: 10,
+                    padding: '8px 10px',
+                    color: '#f1f5f9',
+                    fontSize: 12,
+                    outline: 'none',
+                  }}
+                  value={effectiveSelectedInterviewerId}
+                  onChange={(event) => setSelectedInterviewerId(event.target.value)}
+                >
+                  {availableInterviewers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.firstName} {member.lastName} - {member.team}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => void onAssignInterviewer(effectiveSelectedInterviewerId, true)}
+                  disabled={!effectiveSelectedInterviewerId}
+                  className="rounded-lg px-3 py-2 transition-all hover:opacity-90 disabled:opacity-40"
+                  style={{ fontSize: 12, fontWeight: 600, color: '#a78bfa', background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}
+                >
+                  Assign
+                </button>
+              </div>
+            </div>
           </>
         )}
 
@@ -577,7 +656,7 @@ function CandidatePanel({
             {application.feedbackForApplicant && (
               <div className="rounded-xl border p-4" style={{ borderColor: 'rgba(99,102,241,0.15)', background: 'rgba(99,102,241,0.04)' }}>
                 <div style={{ fontSize: 10, color: '#818cf8', fontWeight: 600, marginBottom: 6 }}>CURRENT SAVED FEEDBACK</div>
-                <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.6, fontStyle: 'italic' }}>"{application.feedbackForApplicant}"</p>
+                <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.6, fontStyle: 'italic' }}>&quot;{application.feedbackForApplicant}&quot;</p>
               </div>
             )}
           </>

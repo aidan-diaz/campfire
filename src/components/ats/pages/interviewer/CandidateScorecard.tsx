@@ -93,7 +93,7 @@ export default function CandidateScorecard() {
 
   const handleSubmit = async () => {
     const sc: ScoreCard = {
-      id: existingCard?.id || `sc-new-${Date.now()}`,
+      id: existingCard?.id || `sc-${application.id}-${currentTeamMember.id}-${currentStageData?.id || 'stage'}`,
       applicantId: applicant.id,
       jobId: job.id,
       stageId: currentStageData?.id || '',

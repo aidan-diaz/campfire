@@ -1,5 +1,12 @@
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-export default function HomeRedirectPage() {
-  redirect("/");
+export default async function HomeRedirectPage() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    redirect("/");
+  }
+
+  redirect("/onboarding/role");
 }

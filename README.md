@@ -18,6 +18,19 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
+## Convex setup
+
+Set `NEXT_PUBLIC_CONVEX_URL` in your local environment before running the app with Convex:
+
+```bash
+NEXT_PUBLIC_CONVEX_URL=<your-convex-deployment-url>
+```
+
+Useful commands:
+
+- `npm run convex:dev`
+- `npm run convex:deploy`
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
