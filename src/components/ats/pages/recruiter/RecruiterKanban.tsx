@@ -18,13 +18,13 @@ import { motion, AnimatePresence } from 'motion/react';
 const KANBAN_STAGES: ApplicationStage[] = ['applied', 'screening', 'interview', 'final_round', 'offered', 'hired'];
 
 const stageColors: Record<ApplicationStage, { bg: string; border: string; color: string; accent: string }> = {
-  applied:     { bg: 'rgba(100,116,139,0.06)', border: 'rgba(100,116,139,0.2)',  color: '#94a3b8', accent: '#cbd5e1' },
-  screening:   { bg: 'rgba(99,102,241,0.06)',  border: 'rgba(99,102,241,0.2)',   color: '#818cf8', accent: '#a5b4fc' },
-  interview:   { bg: 'rgba(245,158,11,0.06)',  border: 'rgba(245,158,11,0.2)',   color: '#f59e0b', accent: '#fbbf24' },
-  final_round: { bg: 'rgba(236,72,153,0.06)',  border: 'rgba(236,72,153,0.2)',   color: '#ec4899', accent: '#f472b6' },
-  offered:     { bg: 'rgba(16,185,129,0.06)',  border: 'rgba(16,185,129,0.2)',   color: '#10b981', accent: '#34d399' },
-  hired:       { bg: 'rgba(245,158,11,0.06)',  border: 'rgba(245,158,11,0.25)',  color: '#f59e0b', accent: '#fbbf24' },
-  rejected:    { bg: 'rgba(239,68,68,0.06)',   border: 'rgba(239,68,68,0.15)',   color: '#ef4444', accent: '#f87171' },
+  applied: { bg: 'rgba(234,226,183,0.04)', border: 'rgba(234,226,183,0.2)', color: 'var(--muted-foreground)', accent: 'var(--foreground)' },
+  screening: { bg: 'rgba(252,191,73,0.04)', border: 'rgba(252,191,73,0.2)', color: 'var(--color-gold)', accent: 'var(--color-gold)' },
+  interview: { bg: 'rgba(247,127,0,0.04)', border: 'rgba(247,127,0,0.2)', color: 'var(--color-orange)', accent: 'var(--color-orange)' },
+  final_round: { bg: 'rgba(244,114,182,0.04)', border: 'rgba(244,114,182,0.2)', color: '#f472b6', accent: '#f472b6' },
+  offered: { bg: 'rgba(76,175,80,0.04)', border: 'rgba(76,175,80,0.2)', color: '#4caf50', accent: '#4caf50' },
+  hired: { bg: 'rgba(252,191,73,0.06)', border: 'rgba(252,191,73,0.3)', color: 'var(--color-gold)', accent: 'var(--color-gold)' },
+  rejected: { bg: 'rgba(214,40,40,0.04)', border: 'rgba(214,40,40,0.2)', color: 'var(--color-flag)', accent: 'var(--color-flag)' },
 };
 
 export default function RecruiterKanban() {
@@ -51,10 +51,10 @@ export default function RecruiterKanban() {
 
   if (!job || !company) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a14' }}>
-        <div className="text-center">
-          <p style={{ color: '#64748b' }}>Job not found.</p>
-          <button onClick={() => router.push('/recruiter/jobs')} style={{ color: '#a78bfa', fontSize: 13, marginTop: 8 }}>← Back</button>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
+        <div className="text-center pixel-border p-8" style={{ background: 'var(--surface)' }}>
+          <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Quest not found.</p>
+          <button onClick={() => router.push('/recruiter/jobs')} className="text-xs mt-2" style={{ color: 'var(--color-orange)' }}>← Back to Quest Board</button>
         </div>
       </div>
     );
@@ -133,30 +133,31 @@ export default function RecruiterKanban() {
   const rejectedCount = byStage.rejected.length;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0a0a14' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--background)' }}>
       {/* Header */}
-      <div className="px-6 pt-8 pb-5 border-b shrink-0" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
-        <button onClick={() => router.push('/recruiter/jobs')} className="flex items-center gap-1.5 mb-3" style={{ fontSize: 13, color: '#64748b' }}>
-          <ChevronLeft size={14} /> All Jobs
+      <div className="px-6 pt-8 pb-5 border-b-2 shrink-0" style={{ borderColor: 'var(--border)' }}>
+        <button onClick={() => router.push('/recruiter/jobs')} className="flex items-center gap-1.5 mb-3 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+          <ChevronLeft size={14} /> All Quests
         </button>
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <div className="text-lg">{company.logo}</div>
-              <span style={{ fontSize: 12, color: company.color, fontWeight: 600, letterSpacing: '0.08em' }}>
-                {company.name.toUpperCase()} · KANBAN
+              <span className="text-[10px] uppercase tracking-widest" style={{ color: company.color }}>
+                {company.name.toUpperCase()} · Kanban
               </span>
             </div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>{job.title}</h1>
-            <p style={{ fontSize: 13, color: '#64748b', marginTop: 3 }}>
-              {job.team} · {totalApplicants} applicant{totalApplicants !== 1 ? 's' : ''} · {hiredCount} hired · {rejectedCount} rejected
+            <h1 className="text-xl uppercase tracking-wider" style={{ color: 'var(--color-gold)' }}>{job.title}</h1>
+            <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+              ► {job.team} · {totalApplicants} applicant{totalApplicants !== 1 ? 's' : ''} · {hiredCount} hired · {rejectedCount} rejected
             </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search size={13} style={{ color: '#475569', position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+              <Search size={13} style={{ color: 'var(--muted-foreground)', position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', zIndex: 1 }} />
               <input
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 10, padding: '7px 12px 7px 30px', color: '#f1f5f9', fontSize: 12, outline: 'none', width: 180 }}
+                className="stat-input pl-8"
+                style={{ width: 180 }}
                 placeholder="Filter candidates..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -173,16 +174,16 @@ export default function RecruiterKanban() {
             const sc = stageColors[stage];
             const cards = filteredByStage[stage];
             return (
-              <div key={stage} className="w-64 shrink-0 flex flex-col rounded-xl border" style={{ background: sc.bg, borderColor: sc.border, maxHeight: 'calc(100vh - 220px)' }}>
+              <div key={stage} className="w-64 shrink-0 flex flex-col" style={{ background: sc.bg, border: `2px solid ${sc.border}`, maxHeight: 'calc(100vh - 220px)' }}>
                 {/* Column Header */}
-                <div className="flex items-center justify-between px-3 py-3 border-b" style={{ borderColor: sc.border }}>
+                <div className="flex items-center justify-between px-3 py-3 border-b-2" style={{ borderColor: sc.border }}>
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: sc.color }}>{stageLabels[stage]}</div>
-                    <div style={{ fontSize: 10, color: '#475569' }}>{stageStoryLabels[stage]}</div>
+                    <div className="text-xs uppercase tracking-wider" style={{ color: sc.color }}>{stageLabels[stage]}</div>
+                    <div className="text-[10px]" style={{ color: 'var(--muted-foreground)' }}>{stageStoryLabels[stage]}</div>
                   </div>
                   <div
-                    className="flex items-center justify-center rounded-full"
-                    style={{ width: 22, height: 22, background: `${sc.color}20`, fontSize: 11, fontWeight: 700, color: sc.color }}
+                    className="flex items-center justify-center text-[10px]"
+                    style={{ width: 22, height: 22, background: sc.color, color: 'var(--primary-foreground)' }}
                   >
                     {cards.length}
                   </div>
@@ -192,8 +193,8 @@ export default function RecruiterKanban() {
                 <div className="flex-1 overflow-y-auto p-2 space-y-2">
                   {cards.length === 0 && (
                     <div className="text-center py-8">
-                      <Users size={20} style={{ color: '#1e293b', margin: '0 auto 6px' }} />
-                      <p style={{ fontSize: 11, color: '#334155' }}>No candidates</p>
+                      <Users size={20} style={{ color: 'var(--muted-foreground)', margin: '0 auto 6px' }} />
+                      <p className="text-[10px]" style={{ color: 'var(--muted-foreground)' }}>No candidates</p>
                     </div>
                   )}
                   {cards.map(({ applicant, application }) => (
@@ -216,8 +217,8 @@ export default function RecruiterKanban() {
           <div className="w-64 shrink-0">
             <button
               onClick={() => setRejectedVisible(!rejectedVisible)}
-              className="w-full flex items-center gap-2 rounded-xl border px-3 py-3 transition-all"
-              style={{ background: 'rgba(239,68,68,0.04)', borderColor: 'rgba(239,68,68,0.15)', color: '#ef4444' }}
+              className="w-full flex items-center gap-2 px-3 py-3 transition-all text-xs uppercase tracking-wider"
+              style={{ background: 'rgba(214,40,40,0.04)', border: '2px solid rgba(214,40,40,0.2)', color: 'var(--color-flag)' }}
             >
               <span style={{ fontSize: 12, fontWeight: 700 }}>Rejected ({byStage.rejected.length})</span>
               {rejectedVisible ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -232,7 +233,7 @@ export default function RecruiterKanban() {
                     stage="rejected"
                     companyColor={company.color}
                     onClick={() => openCard(applicant, application)}
-                    onAdvance={() => {}}
+                    onAdvance={() => { }}
                   />
                 ))}
               </div>
@@ -256,7 +257,7 @@ export default function RecruiterKanban() {
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className="fixed right-0 top-0 bottom-0 z-50 overflow-y-auto"
-              style={{ width: 420, background: '#0f0f1e', borderLeft: '1px solid rgba(124,58,237,0.2)' }}
+              style={{ width: 420, background: 'var(--surface)', borderLeft: '2px solid var(--border)' }}
             >
               <CandidatePanel
                 applicant={selectedCard.applicant}
@@ -331,52 +332,52 @@ function KanbanCard({
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border p-3 cursor-pointer transition-all hover:bg-white/[0.02]"
-      style={{ background: 'rgba(10,10,20,0.8)', borderColor: 'rgba(124,58,237,0.1)' }}
+      className="p-3 cursor-pointer transition-all"
+      style={{ background: 'var(--surface)', border: '2px solid var(--border)' }}
       onClick={onClick}
     >
       <div className="flex items-start gap-2.5">
         <div
-          className="flex items-center justify-center rounded-full shrink-0"
-          style={{ width: 32, height: 32, background: `linear-gradient(135deg,${companyColor},${companyColor}99)`, fontSize: 11, fontWeight: 700, color: 'white' }}
+          className="flex items-center justify-center shrink-0"
+          style={{ width: 32, height: 32, background: `linear-gradient(135deg, var(--color-gold), var(--color-orange))`, fontSize: 10, color: 'var(--primary-foreground)' }}
         >
           {applicant.avatar}
         </div>
         <div className="flex-1 min-w-0">
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>
+          <div className="text-xs" style={{ color: 'var(--foreground)' }}>
             {applicant.firstName} {applicant.lastName}
           </div>
-          <div style={{ fontSize: 10, color: '#64748b', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div className="text-[10px] truncate" style={{ color: 'var(--muted-foreground)' }}>
             {applicant.jobGoal}
           </div>
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
-          <Star size={9} style={{ color: '#f59e0b' }} fill="#f59e0b" />
-          <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 700 }}>Lv.{applicant.level}</span>
+          <Star size={9} style={{ color: 'var(--color-gold)' }} fill="var(--color-gold)" />
+          <span className="text-[10px]" style={{ color: 'var(--color-gold)' }}>Lv.{applicant.level}</span>
         </div>
       </div>
 
       {/* XP + Tasks */}
-      <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
+      <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t-2" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center gap-1">
-          <Swords size={10} style={{ color: '#a78bfa' }} />
-          <span style={{ fontSize: 10, color: '#94a3b8' }}>{completedCount} tasks</span>
+          <Swords size={10} style={{ color: 'var(--color-orange)' }} />
+          <span className="text-[10px]" style={{ color: 'var(--muted-foreground)' }}>{completedCount} tasks</span>
         </div>
         <div className="flex items-center gap-1">
-          <Sparkles size={10} style={{ color: '#f59e0b' }} />
-          <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 600 }}>{totalXP.toLocaleString()} XP</span>
+          <Sparkles size={10} style={{ color: 'var(--color-gold)' }} />
+          <span className="text-[10px]" style={{ color: 'var(--color-gold)' }}>{totalXP.toLocaleString()} XP</span>
         </div>
       </div>
 
       {/* Applied date */}
-      <div style={{ fontSize: 10, color: '#334155', marginTop: 4 }}>Applied {application.dateApplied}</div>
+      <div className="text-[10px] mt-2" style={{ color: 'var(--muted-foreground)' }}>Applied {application.dateApplied}</div>
 
       {/* Action */}
       {canAdvance && (
         <button
           onClick={(e) => { e.stopPropagation(); onAdvance(); }}
-          className="w-full mt-2 rounded-lg py-1.5 flex items-center justify-center gap-1.5 transition-all hover:opacity-90"
-          style={{ background: `${sc.color}15`, color: sc.color, fontSize: 11, fontWeight: 600 }}
+          className="w-full mt-2 py-1.5 flex items-center justify-center gap-1.5 transition-all text-[10px] uppercase tracking-wider"
+          style={{ background: `${sc.color}15`, color: sc.color, border: `1px solid ${sc.color}40` }}
         >
           <ArrowRight size={11} />
           Advance

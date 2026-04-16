@@ -12,7 +12,7 @@ function Tabs({
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("flex flex-col gap-4", className)}
       {...props}
     />
   );
@@ -26,8 +26,9 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-xl p-[3px] flex",
-        className,
+        "inline-flex w-fit items-center gap-1 p-1",
+        "bg-[var(--surface)] border-2 border-[var(--border)]",
+        className
       )}
       {...props}
     />
@@ -42,8 +43,18 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "data-[state=active]:bg-card dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-xl border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className,
+        "inline-flex items-center justify-center gap-1.5 px-4 py-2",
+        "text-xs uppercase tracking-wider whitespace-nowrap",
+        "transition-all outline-none",
+        "text-[var(--muted-foreground)]",
+        "border-2 border-transparent",
+        "hover:text-[var(--color-orange)] hover:border-[var(--color-orange)]",
+        "data-[state=active]:bg-[var(--color-orange)] data-[state=active]:text-[var(--primary-foreground)]",
+        "data-[state=active]:border-[var(--color-orange)]",
+        "data-[state=active]:shadow-[3px_3px_0_rgba(0,0,0,0.4)]",
+        "disabled:pointer-events-none disabled:opacity-50",
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
       )}
       {...props}
     />

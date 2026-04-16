@@ -1,19 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useAts } from '@/context/AtsContext';
-import { XPBar } from '@/components/ats/shared/XPBar';
-import { TaskCard } from '@/components/ats/shared/TaskCard';
-import { JourneyPath } from '@/components/ats/shared/JourneyPath';
-import { getTaskById, getCompanyById, stageStoryLabels } from '@/data/ats/mockData';
-import { User, MapPin, Briefcase, Star, Award, Upload, FileText } from 'lucide-react';
+import { useState } from "react";
+import { useAts } from "@/context/AtsContext";
+import { XPBar } from "@/components/ats/shared/XPBar";
+import { TaskCard } from "@/components/ats/shared/TaskCard";
+import { JourneyPath } from "@/components/ats/shared/JourneyPath";
+import { ResumeUpload } from "@/components/ats/shared/ResumeUpload";
+import { QuestStepper } from "@/components/ats/shared/QuestStepper";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ats/ui/card";
+import { Badge } from "@/components/ats/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ats/ui/tabs";
+import { getTaskById, getCompanyById, stageStoryLabels } from "@/data/ats/mockData";
+import { User, MapPin, Briefcase, Star, Award } from "lucide-react";
 
 function toDisplayEmail(value: string): string | null {
   const trimmed = value.trim();
-  if (!trimmed.includes('@')) return null;
+  if (!trimmed.includes("@")) return null;
   if (trimmed.length > 120) return null;
-  if (trimmed.endsWith('@users.clerk.local')) return null;
-  const localPart = trimmed.split('@')[0] ?? '';
+  if (trimmed.endsWith("@users.clerk.local")) return null;
+  const localPart = trimmed.split("@")[0] ?? "";
   if (localPart.length > 24) return null;
   return trimmed;
 }
@@ -24,283 +29,402 @@ function toDisplayName(value: string, fallback: string): string {
   return trimmed;
 }
 
-function toDisplayAvatar(avatar: string, firstName: string, lastName: string): string {
+function toDisplayAvatar(
+  avatar: string,
+  firstName: string,
+  lastName: string
+): string {
   const trimmed = avatar.trim();
   if (trimmed.length > 0 && trimmed.length <= 3) return trimmed;
-  const initials = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase();
-  return initials || 'U';
+  const initials =
+    `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
+  return initials || "U";
 }
 
 export default function ApplicantProfile() {
   const { currentApplicant, allJobs, uploadApplicantResume } = useAts();
   const jobById = (id: string) => allJobs.find((j) => j.id === id);
   const a = currentApplicant;
-  const [profileTab, setProfileTab] = useState<'quest' | 'challenges'>('quest');
-  const [selectedResumeFile, setSelectedResumeFile] = useState<File | null>(null);
-  const [isUploadingResume, setIsUploadingResume] = useState(false);
 
   const totalXP = a.completedTasks.reduce((s, ct) => s + ct.pointsEarned, 0);
   const displayEmail = toDisplayEmail(a.email);
-  const displayFirstName = toDisplayName(a.firstName, 'Applicant');
-  const displayLastName = toDisplayName(a.lastName, '');
+  const displayFirstName = toDisplayName(a.firstName, "Adventurer");
+  const displayLastName = toDisplayName(a.lastName, "");
   const displayAvatar = toDisplayAvatar(a.avatar, a.firstName, a.lastName);
 
-  const handleResumeUpload = async () => {
-    if (!selectedResumeFile) return;
-    setIsUploadingResume(true);
-    try {
-      await uploadApplicantResume(selectedResumeFile);
-      setSelectedResumeFile(null);
-    } catch {
-      return;
-    } finally {
-      setIsUploadingResume(false);
-    }
-  };
+  const profileSteps = ["Resume", "Skills", "Profile", "First Quest"];
+  const profileProgress = (() => {
+    if (a.applications.length > 0) return 4;
+    if (a.skills.length > 0) return 2;
+    if (a.resumeUrl) return 1;
+    return 0;
+  })();
 
   return (
-    <div className="min-h-screen" style={{ background: '#0a0a14' }}>
-      <div className="px-6 pt-8 pb-6 border-b" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
+    <div className="min-h-screen" style={{ background: "var(--background)" }}>
+      <div
+        className="px-6 pt-8 pb-6 border-b-2"
+        style={{ borderColor: "var(--border)" }}
+      >
         <div className="flex items-center gap-2 mb-1">
-          <User size={16} style={{ color: '#7c3aed' }} />
-          <span style={{ fontSize: 12, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>CAREER PROFILE</span>
+          <User size={16} style={{ color: "var(--color-orange)" }} />
+          <span
+            className="text-[10px] uppercase tracking-widest"
+            style={{ color: "var(--color-orange)" }}
+          >
+            Career Profile
+          </span>
         </div>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+        <h1
+          className="text-xl uppercase tracking-wider"
+          style={{ color: "var(--color-gold)" }}
+        >
           {displayFirstName} {displayLastName}
         </h1>
-        <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>{a.jobGoal}</p>
+        <p
+          className="text-xs mt-1"
+          style={{ color: "var(--muted-foreground)" }}
+        >
+          {a.jobGoal}
+        </p>
       </div>
 
-      {/* Profile summary — full width, directly under role */}
-      <div className="px-6 pt-6 w-full space-y-5">
-        <div className="rounded-xl border p-5 w-full" style={{ borderColor: 'rgba(124,58,237,0.15)', background: 'rgba(255,255,255,0.01)' }}>
-          <div className="flex flex-col sm:flex-row sm:items-start gap-6">
-            <div
-              className="flex items-center justify-center rounded-full shrink-0 mx-auto sm:mx-0"
-              style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#7c3aed,#a78bfa)', fontSize: 24, fontWeight: 800, color: 'white' }}
-            >
-              {displayAvatar}
-            </div>
-            <div className="flex-1 min-w-0 text-center sm:text-left">
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f5f9' }}>{displayFirstName} {displayLastName}</h2>
-              {displayEmail ? (
-                <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12 }}>{displayEmail}</p>
-              ) : (
-                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>Email hidden</p>
-              )}
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 sm:gap-6">
-                <div className="text-center">
-                  <div style={{ fontSize: 20, fontWeight: 800, color: '#f59e0b' }}>{a.level}</div>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>Level</div>
-                </div>
-                <div style={{ width: 1, height: 30, background: 'rgba(124,58,237,0.2)' }} className="hidden sm:block" />
-                <div className="text-center">
-                  <div style={{ fontSize: 20, fontWeight: 800, color: '#a78bfa' }}>{a.completedTasks.length}</div>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>Tasks</div>
-                </div>
-                <div style={{ width: 1, height: 30, background: 'rgba(124,58,237,0.2)' }} className="hidden sm:block" />
-                <div className="text-center">
-                  <div style={{ fontSize: 20, fontWeight: 800, color: '#10b981' }}>{a.applications.length}</div>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>Quests</div>
+      <div className="px-6 pt-6 space-y-5">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-6">
+              <div
+                className="flex items-center justify-center shrink-0 mx-auto sm:mx-0 text-xl"
+                style={{
+                  width: 72,
+                  height: 72,
+                  background:
+                    "linear-gradient(135deg, var(--color-gold), var(--color-orange))",
+                  border: "2px solid var(--color-gold)",
+                  boxShadow:
+                    "3px 3px 0 rgba(0,0,0,0.4), 0 0 16px rgba(252,191,73,0.3)",
+                  color: "var(--primary-foreground)",
+                }}
+              >
+                {displayAvatar}
+              </div>
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <h2
+                  className="text-sm uppercase tracking-wider"
+                  style={{ color: "var(--foreground)" }}
+                >
+                  {displayFirstName} {displayLastName}
+                </h2>
+                {displayEmail ? (
+                  <p
+                    className="text-xs mt-1"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
+                    {displayEmail}
+                  </p>
+                ) : (
+                  <p
+                    className="text-xs mt-1"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
+                    Email hidden
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-6 mt-4">
+                  <div className="text-center">
+                    <div
+                      className="text-lg"
+                      style={{ color: "var(--color-gold)" }}
+                    >
+                      {a.level}
+                    </div>
+                    <div
+                      className="text-[10px] uppercase tracking-wider"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      Level
+                    </div>
+                  </div>
+                  <div
+                    className="hidden sm:block"
+                    style={{
+                      width: 2,
+                      height: 30,
+                      background: "var(--border)",
+                    }}
+                  />
+                  <div className="text-center">
+                    <div
+                      className="text-lg"
+                      style={{ color: "var(--color-orange)" }}
+                    >
+                      {a.completedTasks.length}
+                    </div>
+                    <div
+                      className="text-[10px] uppercase tracking-wider"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      Tasks
+                    </div>
+                  </div>
+                  <div
+                    className="hidden sm:block"
+                    style={{
+                      width: 2,
+                      height: 30,
+                      background: "var(--border)",
+                    }}
+                  />
+                  <div className="text-center">
+                    <div className="text-lg" style={{ color: "#4caf50" }}>
+                      {a.applications.length}
+                    </div>
+                    <div
+                      className="text-[10px] uppercase tracking-wider"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      Quests
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <XPBar level={a.level} xp={a.xp} xpToNextLevel={a.xpToNextLevel} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
-          <div className="rounded-xl border p-4 space-y-3 w-full" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-            <div className="flex items-center gap-3">
-              <MapPin size={14} style={{ color: '#64748b' }} />
-              <span style={{ fontSize: 13, color: '#94a3b8' }}>{a.location}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Briefcase size={14} style={{ color: '#64748b' }} />
-              <span style={{ fontSize: 13, color: '#94a3b8' }}>{a.experience} years experience</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Star size={14} style={{ color: '#f59e0b' }} />
-              <span style={{ fontSize: 13, color: '#94a3b8' }}>{totalXP.toLocaleString()} total XP earned</span>
-            </div>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Completion</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <QuestStepper steps={profileSteps} currentIndex={profileProgress} />
+          </CardContent>
+        </Card>
 
-          <div className="rounded-xl border p-4 w-full" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-            <h4 style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', marginBottom: 10 }}>Skills</h4>
-            <div className="flex flex-wrap gap-2">
-              {a.skills.map((skill) => (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardContent className="pt-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <MapPin size={14} style={{ color: "var(--muted-foreground)" }} />
                 <span
-                  key={skill}
-                  className="px-2.5 py-1 rounded-full"
-                  style={{ fontSize: 11, background: 'rgba(124,58,237,0.12)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.2)' }}
+                  className="text-xs"
+                  style={{ color: "var(--foreground)" }}
                 >
-                  {skill}
+                  {a.location}
                 </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border p-4 w-full space-y-4" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-          <div>
-            <h4 style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9', marginBottom: 8 }}>Resume Summary</h4>
-            <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6, fontStyle: 'italic' }}>{a.resumeSnippet}</p>
-          </div>
-          <div className="rounded-lg border p-3 space-y-2" style={{ borderColor: 'rgba(124,58,237,0.15)', background: 'rgba(124,58,237,0.05)' }}>
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <FileText size={14} style={{ color: '#a78bfa' }} />
-                <span style={{ fontSize: 12, color: '#cbd5e1', fontWeight: 600 }}>Saved Resume</span>
               </div>
-              {a.resumeUrl ? (
-                <a
-                  href={a.resumeUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ fontSize: 11, color: '#a78bfa', fontWeight: 600 }}
+              <div className="flex items-center gap-3">
+                <Briefcase
+                  size={14}
+                  style={{ color: "var(--muted-foreground)" }}
+                />
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--foreground)" }}
                 >
-                  View current
-                </a>
-              ) : (
-                <span style={{ fontSize: 11, color: '#64748b' }}>No resume uploaded</span>
-              )}
-            </div>
-            <p style={{ fontSize: 11, color: '#94a3b8' }}>
-              Upload a resume once and it will automatically attach to any new job applications.
-            </p>
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              onChange={(event) => setSelectedResumeFile(event.target.files?.[0] ?? null)}
-              style={{ fontSize: 12, color: '#94a3b8', width: '100%' }}
-            />
-            <button
-              type="button"
-              onClick={() => void handleResumeUpload()}
-              disabled={!selectedResumeFile || isUploadingResume}
-              className="rounded-lg px-3 py-2 flex items-center gap-2 transition-all hover:opacity-90 disabled:opacity-40"
-              style={{ fontSize: 12, fontWeight: 600, color: '#a78bfa', background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}
+                  {a.experience} years experience
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Star size={14} style={{ color: "var(--color-gold)" }} />
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--color-gold)" }}
+                >
+                  {totalXP.toLocaleString()} total XP earned
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Skills</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {a.skills.map((skill) => (
+                  <Badge key={skill} variant="xp">
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Resume</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p
+              className="text-xs italic"
+              style={{ color: "var(--foreground)", lineHeight: 1.6 }}
             >
-              <Upload size={13} />
-              {isUploadingResume ? 'Uploading...' : 'Upload Resume'}
-            </button>
-          </div>
-        </div>
+              {a.resumeSnippet}
+            </p>
+            <ResumeUpload
+              onUpload={uploadApplicantResume}
+              currentResumeUrl={a.resumeUrl}
+              currentResumeFileName={a.resumeFileName}
+            />
+          </CardContent>
+        </Card>
 
-        <div className="flex flex-wrap gap-2 pt-2">
-          <button
-            type="button"
-            onClick={() => setProfileTab('quest')}
-            className="rounded-xl px-4 py-2.5 transition-all"
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              background: profileTab === 'quest' ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'rgba(255,255,255,0.04)',
-              color: profileTab === 'quest' ? '#fff' : '#94a3b8',
-              border: `1px solid ${profileTab === 'quest' ? 'transparent' : 'rgba(124,58,237,0.15)'}`,
-              boxShadow: profileTab === 'quest' ? '0 0 20px rgba(124,58,237,0.25)' : 'none',
-            }}
-          >
-            Quest History
-          </button>
-          <button
-            type="button"
-            onClick={() => setProfileTab('challenges')}
-            className="rounded-xl px-4 py-2.5 transition-all"
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              background: profileTab === 'challenges' ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'rgba(255,255,255,0.04)',
-              color: profileTab === 'challenges' ? '#fff' : '#94a3b8',
-              border: `1px solid ${profileTab === 'challenges' ? 'transparent' : 'rgba(124,58,237,0.15)'}`,
-              boxShadow: profileTab === 'challenges' ? '0 0 20px rgba(124,58,237,0.25)' : 'none',
-            }}
-          >
-            Completed Challenges
-          </button>
-        </div>
-      </div>
+        <Tabs defaultValue="quests">
+          <TabsList>
+            <TabsTrigger value="quests">Quest History</TabsTrigger>
+            <TabsTrigger value="challenges">Completed Challenges</TabsTrigger>
+          </TabsList>
 
-      <div className="px-6 pb-8 pt-2 w-full">
-        {profileTab === 'quest' && (
-          <div className="space-y-4 w-full">
+          <TabsContent value="quests" className="space-y-4 pt-4">
             {a.applications.map((app) => {
               const job = jobById(app.jobId);
               const company = getCompanyById(app.companyId);
               if (!job || !company) return null;
               return (
-                <div key={app.id} className="rounded-xl border p-4 w-full" style={{ borderColor: `${company.color}25`, background: `${company.color}06` }}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="text-lg" style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${company.color}20`, borderRadius: 8 }}>
-                      {company.logo}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>{job.title}</div>
-                      <div style={{ fontSize: 12, color: company.color }}>{company.name}</div>
-                    </div>
-                    <div className="text-right shrink-0">
+                <Card
+                  key={app.id}
+                  style={{
+                    borderLeftWidth: 4,
+                    borderLeftColor: company.color,
+                  }}
+                >
+                  <CardContent className="pt-4">
+                    <div className="flex items-center gap-3 mb-3">
                       <div
-                        className="px-2.5 py-1 rounded-full"
+                        className="text-lg flex items-center justify-center"
                         style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          background: app.stage === 'hired' ? 'rgba(16,185,129,0.15)' : app.stage === 'rejected' ? 'rgba(239,68,68,0.15)' : `${company.color}15`,
-                          color: app.stage === 'hired' ? '#10b981' : app.stage === 'rejected' ? '#ef4444' : company.accentColor,
+                          width: 36,
+                          height: 36,
+                          background: `${company.color}20`,
                         }}
                       >
-                        {stageStoryLabels[app.stage]}
+                        {company.logo}
                       </div>
-                      <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>Applied {app.dateApplied}</div>
-                    </div>
-                  </div>
-                  <JourneyPath currentStage={app.stage} />
-                  {app.completedTasks.length > 0 && (
-                    <div className="mt-3 pt-3 border-t" style={{ borderColor: `${company.color}15` }}>
-                      <div style={{ fontSize: 11, color: '#64748b', marginBottom: 6 }}>Challenges completed for this quest:</div>
-                      <div className="flex flex-wrap gap-2">
-                        {app.completedTasks.map((ct) => {
-                          const task = getTaskById(ct.taskId);
-                          return task ? (
-                            <span key={ct.taskId} className="flex items-center gap-1 px-2 py-1 rounded-full" style={{ fontSize: 10, background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}>
-                              ✓ {task.name} (+{ct.pointsEarned} XP)
-                            </span>
-                          ) : null;
-                        })}
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className="text-sm"
+                          style={{ color: "var(--foreground)" }}
+                        >
+                          {job.title}
+                        </div>
+                        <div
+                          className="text-[10px] uppercase tracking-wider"
+                          style={{ color: company.color }}
+                        >
+                          {company.name}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <Badge
+                          variant={
+                            app.stage === "hired"
+                              ? "success"
+                              : app.stage === "rejected"
+                                ? "danger"
+                                : "stage"
+                          }
+                        >
+                          {stageStoryLabels[app.stage]}
+                        </Badge>
+                        <div
+                          className="text-[10px] mt-1"
+                          style={{ color: "var(--muted-foreground)" }}
+                        >
+                          Applied {app.dateApplied}
+                        </div>
                       </div>
                     </div>
-                  )}
-                  {app.feedbackForApplicant && (
-                    <div className="mt-3 pt-3 border-t" style={{ borderColor: `${company.color}15` }}>
-                      <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Guide Feedback:</div>
-                      <p style={{ fontSize: 12, color: '#cbd5e1', fontStyle: 'italic', lineHeight: 1.5 }}>{`"${app.feedbackForApplicant}"`}</p>
-                    </div>
-                  )}
-                </div>
+                    <JourneyPath currentStage={app.stage} />
+                    {app.completedTasks.length > 0 && (
+                      <div
+                        className="mt-3 pt-3 border-t-2"
+                        style={{ borderColor: "var(--border)" }}
+                      >
+                        <div
+                          className="text-[10px] uppercase tracking-wider mb-2"
+                          style={{ color: "var(--muted-foreground)" }}
+                        >
+                          Challenges completed:
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {app.completedTasks.map((ct) => {
+                            const task = getTaskById(ct.taskId);
+                            return task ? (
+                              <Badge key={ct.taskId} variant="success">
+                                ✓ {task.name} (+{ct.pointsEarned} XP)
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {app.feedbackForApplicant && (
+                      <div
+                        className="mt-3 pt-3 border-t-2"
+                        style={{ borderColor: "var(--border)" }}
+                      >
+                        <div
+                          className="text-[10px] uppercase tracking-wider mb-2"
+                          style={{ color: "var(--color-gold)" }}
+                        >
+                          Guide Feedback:
+                        </div>
+                        <p
+                          className="text-xs italic"
+                          style={{
+                            color: "var(--foreground)",
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          "{app.feedbackForApplicant}"
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               );
             })}
-          </div>
-        )}
+          </TabsContent>
 
-        {profileTab === 'challenges' && (
-          <div className="w-full space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#f1f5f9' }}>Completed Challenges</h2>
+          <TabsContent value="challenges" className="pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <h2
+                className="text-sm uppercase tracking-wider"
+                style={{ color: "var(--color-gold)" }}
+              >
+                Completed Challenges
+              </h2>
               <div className="flex items-center gap-2">
-                <Award size={14} style={{ color: '#f59e0b' }} />
-                <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600 }}>{a.completedTasks.length} challenges · {totalXP.toLocaleString()} XP</span>
+                <Award size={14} style={{ color: "var(--color-gold)" }} />
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--color-gold)" }}
+                >
+                  {a.completedTasks.length} challenges ·{" "}
+                  {totalXP.toLocaleString()} XP
+                </span>
               </div>
             </div>
-            <div className="space-y-2 w-full">
+            <div className="space-y-3">
               {a.completedTasks.map((ct) => {
                 const task = getTaskById(ct.taskId);
                 return task ? (
-                  <TaskCard key={ct.taskId} task={task} completed completedDate={ct.dateCompleted} />
+                  <TaskCard
+                    key={ct.taskId}
+                    task={task}
+                    completed
+                    completedDate={ct.dateCompleted}
+                  />
                 ) : null;
               })}
             </div>
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

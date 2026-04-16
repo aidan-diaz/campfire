@@ -12,7 +12,9 @@ import {
 } from "@/lib/auth/roles";
 import { getRoleHomePath } from "@/lib/auth/redirects";
 import { setRolePublicMetadata } from "@/lib/auth/actions";
-import { Upload, FileText, CheckCircle2 } from "lucide-react";
+import { Upload, FileText, CheckCircle2, Sword, Crown, Scroll } from "lucide-react";
+import { motion } from "motion/react";
+import { retro } from "@/lib/animations";
 
 function getRoleFromMetadata(user: ReturnType<typeof useUser>["user"]): OnboardingRole | null {
   if (!user) return null;
@@ -22,12 +24,26 @@ function getRoleFromMetadata(user: ReturnType<typeof useUser>["user"]): Onboardi
   );
 }
 
+const ROLE_ICONS: Record<OnboardingRole, React.ReactNode> = {
+  applicant: <Sword size={24} style={{ color: 'var(--color-gold)' }} />,
+  hiring_manager: <Crown size={24} style={{ color: 'var(--color-orange)' }} />,
+  interviewer: <Scroll size={24} style={{ color: 'var(--foreground)' }} />,
+};
+
+const ROLE_CLASS_NAMES: Record<OnboardingRole, string> = {
+  applicant: 'ADVENTURER',
+  hiring_manager: 'GUILD MASTER',
+  interviewer: 'GUIDE',
+};
+
 export default function RoleOnboardingPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-full flex-1 items-center justify-center bg-zinc-50 px-4 py-16 dark:bg-black">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Loading your onboarding...</p>
+        <main className="flex min-h-full flex-1 items-center justify-center px-4 py-16" style={{ background: 'var(--background)' }}>
+          <div className="pixel-border p-6" style={{ background: 'var(--surface)' }}>
+            <p style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)' }}>LOADING YOUR ONBOARDING...</p>
+          </div>
         </main>
       }
     >
@@ -138,15 +154,18 @@ function RoleOnboardingInner() {
 
   if (!isLoaded || !isSignedIn || clerkRole || (existingUser === undefined && !clerkRole) || existingRole) {
     return (
-      <main className="flex min-h-full flex-1 items-center justify-center bg-zinc-50 px-4 py-16 dark:bg-black">
+      <main className="flex min-h-full flex-1 items-center justify-center px-4 py-16" style={{ background: 'var(--background)' }}>
         <div className="flex flex-col items-center gap-4">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Loading your onboarding...</p>
+          <div className="pixel-border p-6" style={{ background: 'var(--surface)' }}>
+            <p style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)' }}>LOADING YOUR ONBOARDING...</p>
+          </div>
           <SignOutButton>
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-900 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-900"
+              className="rpg-button px-4 py-2"
+              style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', background: 'var(--surface)', color: 'var(--foreground)', border: '2px solid var(--border)' }}
             >
-              Sign out
+              SIGN OUT
             </button>
           </SignOutButton>
         </div>
@@ -156,104 +175,155 @@ function RoleOnboardingInner() {
 
   if (step === "resume") {
     return (
-      <main className="flex min-h-full flex-1 items-center justify-center px-4 py-12" style={{ background: '#0a0a14' }}>
-        <div className="w-full max-w-lg rounded-2xl border p-6" style={{ borderColor: 'rgba(124,58,237,0.2)', background: '#0f0f1e' }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#f1f5f9' }}>Upload your resume</h1>
-          <p style={{ fontSize: 14, color: '#94a3b8', marginTop: 8 }}>
-            Add your resume now and we&#39;ll attach it automatically to every job application.
+      <main className="flex min-h-full flex-1 items-center justify-center px-4 py-12 scanlines" style={{ background: 'var(--background)', position: 'relative' }}>
+        {/* Pixel grid */}
+        <div className="absolute inset-0 z-0" style={{
+          backgroundImage: 'linear-gradient(rgba(252,191,73,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(252,191,73,0.04) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+        }} />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={retro.spring}
+          className="relative z-10 w-full max-w-lg pixel-border p-6"
+          style={{ background: 'var(--surface)' }}
+        >
+          <h1 style={{ fontSize: 14, fontFamily: 'var(--font-pixel)', color: 'var(--color-gold)', letterSpacing: '0.05em' }}>EQUIP YOUR RESUME</h1>
+          <p style={{ fontSize: 9, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', marginTop: 12, lineHeight: 1.8 }}>
+            ADD YOUR RESUME NOW AND WE&#39;LL ATTACH IT AUTOMATICALLY TO EVERY QUEST APPLICATION.
           </p>
 
           <div className="mt-6 space-y-4">
             {uploadedFileName ? (
-              <div className="flex items-center gap-3 rounded-xl border p-4" style={{ borderColor: 'rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.08)' }}>
-                <CheckCircle2 size={20} style={{ color: '#10b981' }} />
+              <div className="pixel-border flex items-center gap-3 p-4" style={{ background: 'var(--surface)', borderColor: '#4caf50' }}>
+                <CheckCircle2 size={20} style={{ color: '#4caf50' }} />
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#10b981' }}>Resume uploaded</div>
-                  <div style={{ fontSize: 12, color: '#94a3b8' }}>{uploadedFileName}</div>
+                  <div style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: '#4caf50' }}>► ITEM EQUIPPED</div>
+                  <div style={{ fontSize: 8, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', marginTop: 4 }}>{uploadedFileName.toUpperCase()}</div>
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: 'rgba(124,58,237,0.15)', background: 'rgba(124,58,237,0.05)' }}>
+              <div className="pixel-border p-4 space-y-3" style={{ background: 'rgba(0,0,0,0.3)' }}>
                 <div className="flex items-center gap-2">
-                  <FileText size={16} style={{ color: '#a78bfa' }} />
-                  <span style={{ fontSize: 13, color: '#f1f5f9', fontWeight: 600 }}>
-                    {resumeFile ? resumeFile.name : 'Choose a file'}
+                  <FileText size={16} style={{ color: 'var(--color-gold)' }} />
+                  <span style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: 'var(--foreground)' }}>
+                    {resumeFile ? resumeFile.name.toUpperCase() : 'DROP ITEM HERE'}
                   </span>
                 </div>
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={(e) => setResumeFile(e.target.files?.[0] ?? null)}
-                  style={{ fontSize: 12, color: '#94a3b8', width: '100%' }}
+                  title="Upload your resume file"
+                  aria-label="Upload your resume file"
+                  style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', width: '100%' }}
                 />
                 {resumeFile && (
-                  <button
+                  <motion.button
+                    whileHover={{ y: -2 }}
+                    whileTap={{ y: 2 }}
+                    transition={retro.snap}
                     type="button"
                     onClick={() => void handleResumeUpload()}
                     disabled={isUploading}
-                    className="flex items-center gap-2 rounded-lg px-4 py-2 transition-all hover:opacity-90 disabled:opacity-40"
-                    style={{ fontSize: 13, fontWeight: 600, color: 'white', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}
+                    className="rpg-button flex items-center gap-2 px-4 py-2 disabled:opacity-40"
+                    style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: 'var(--background)', background: 'var(--color-orange)' }}
                   >
                     <Upload size={14} />
-                    {isUploading ? 'Uploading...' : 'Upload'}
-                  </button>
+                    {isUploading ? 'UPLOADING...' : 'UPLOAD'}
+                  </motion.button>
                 )}
               </div>
             )}
 
             {errorMessage && (
-              <p style={{ fontSize: 13, color: '#ef4444' }}>{errorMessage}</p>
+              <p style={{ fontSize: 9, fontFamily: 'var(--font-pixel)', color: 'var(--color-flag)' }}>▲ {errorMessage.toUpperCase()}</p>
             )}
 
-            <button
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ y: 2 }}
+              transition={retro.snap}
               type="button"
               onClick={handleContinueToDashboard}
-              className="w-full rounded-xl py-3 transition-all hover:opacity-90"
+              className="rpg-button w-full py-3"
               style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: 'white',
-                background: 'linear-gradient(135deg,#7c3aed,#4f46e5)',
-                boxShadow: '0 0 20px rgba(124,58,237,0.3)',
+                fontSize: 10,
+                fontFamily: 'var(--font-pixel)',
+                color: 'var(--background)',
+                background: 'var(--color-orange)',
+                boxShadow: '0 0 20px rgba(247,127,0,0.3), 4px 4px 0 rgba(0,0,0,0.3)',
               }}
             >
-              {uploadedFileName ? 'Continue to Dashboard' : 'Skip for Now'}
-            </button>
+              {uploadedFileName ? '[ BEGIN ADVENTURE → ]' : '[ SKIP FOR NOW → ]'}
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-full flex-1 items-center justify-center bg-zinc-50 px-4 py-12 dark:bg-black">
-      <div className="w-full max-w-3xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-          Choose your role
+    <main className="flex min-h-full flex-1 items-center justify-center px-4 py-12 scanlines" style={{ background: 'var(--background)', position: 'relative' }}>
+      {/* Pixel grid */}
+      <div className="absolute inset-0 z-0" style={{
+        backgroundImage: 'linear-gradient(rgba(252,191,73,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(252,191,73,0.04) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
+      }} />
+
+      {/* Radial glow */}
+      <div className="absolute inset-0 z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(252,191,73,0.1) 0%, transparent 60%)' }} />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={retro.spring}
+        className="relative z-10 w-full max-w-3xl pixel-border p-6"
+        style={{ background: 'var(--surface)' }}
+      >
+        <h1 style={{ fontSize: 16, fontFamily: 'var(--font-pixel)', color: 'var(--color-gold)', letterSpacing: '0.05em' }}>
+          SELECT YOUR CLASS
         </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Pick your role to finish account setup and open your dashboard.
+        <p style={{ fontSize: 9, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', marginTop: 12, lineHeight: 1.8 }}>
+          PICK YOUR CLASS TO FINISH ACCOUNT SETUP AND BEGIN YOUR ADVENTURE.
         </p>
 
         <div className="mt-6 grid gap-3 md:grid-cols-3">
-          {ROLE_OPTIONS.map((role) => (
-            <button
+          {ROLE_OPTIONS.map((role, i) => (
+            <motion.button
               key={role.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -4, boxShadow: '0 0 20px rgba(252,191,73,0.2)' }}
+              whileTap={{ y: 2 }}
+              transition={{ delay: i * 0.1, ...retro.snap }}
               type="button"
               onClick={() => void handleSelectRole(role.id)}
               disabled={isSaving}
-              className="rounded-xl border border-zinc-200 p-4 text-left transition hover:border-zinc-400 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-800 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
+              className="pixel-border p-4 text-left disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ background: selectedRole === role.id ? 'var(--surface-raised)' : 'var(--surface)' }}
             >
-              <div className="text-base font-medium text-zinc-900 dark:text-zinc-100">{role.label}</div>
-              <div className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{role.description}</div>
-            </button>
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className="flex items-center justify-center"
+                  style={{ width: 40, height: 40, background: 'rgba(0,0,0,0.4)', border: '2px solid var(--border)' }}
+                >
+                  {ROLE_ICONS[role.id]}
+                </div>
+                <div style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: role.id === 'applicant' ? 'var(--color-gold)' : role.id === 'hiring_manager' ? 'var(--color-orange)' : 'var(--foreground)' }}>
+                  {ROLE_CLASS_NAMES[role.id]}
+                </div>
+              </div>
+              <div style={{ fontSize: 8, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', lineHeight: 1.8 }}>{role.description.toUpperCase()}</div>
+            </motion.button>
           ))}
         </div>
 
         {errorMessage ? (
-          <p className="mt-4 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+          <p style={{ fontSize: 9, fontFamily: 'var(--font-pixel)', color: 'var(--color-flag)', marginTop: 16 }}>▲ {errorMessage.toUpperCase()}</p>
         ) : null}
-      </div>
+      </motion.div>
     </main>
   );
 }

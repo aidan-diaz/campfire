@@ -5,24 +5,33 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "./utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
+  "inline-flex items-center justify-center border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none transition-colors overflow-hidden",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
+          "border-[var(--color-orange)] bg-[rgba(247,127,0,0.12)] text-[var(--color-orange)]",
+        xp: "border-[var(--color-gold)] bg-[rgba(252,191,73,0.12)] text-[var(--color-gold)]",
+        stage:
+          "border-[var(--color-orange)] bg-[rgba(247,127,0,0.15)] text-[var(--color-orange)]",
+        danger:
+          "border-[var(--color-flag)] bg-[rgba(214,40,40,0.12)] text-[var(--color-flag)]",
+        success:
+          "border-[#4caf50] bg-[rgba(76,175,80,0.12)] text-[#4caf50]",
+        level:
+          "border-[var(--color-gold)] bg-gradient-to-r from-[var(--color-gold)] to-[var(--color-orange)] text-[var(--primary-foreground)]",
+        muted:
+          "border-[var(--border)] bg-[rgba(234,226,183,0.06)] text-[var(--muted-foreground)]",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
-        destructive:
-          "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]",
         outline:
-          "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+          "border-[var(--border)] bg-transparent text-[var(--foreground)]",
       },
     },
     defaultVariants: {
       variant: "default",
     },
-  },
+  }
 );
 
 function Badge({

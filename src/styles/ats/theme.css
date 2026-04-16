@@ -1,81 +1,118 @@
 @custom-variant dark (&:is(.dark *));
 
+/* === QuestHire Retro RPG Palette === */
 :root {
-  --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
-  --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.0058 264.53);
-  --secondary-foreground: #030213;
-  --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
-  --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
-  --font-weight-medium: 500;
+  /* Brand Colors */
+  --color-space: #003049;
+  --color-flag: #d62828;
+  --color-orange: #f77f00;
+  --color-gold: #fcbf49;
+  --color-vanilla: #eae2b7;
+
+  /* Derived surface tokens */
+  --background: #001824;
+  --surface: #003049;
+  --surface-raised: #00405f;
+  --surface-overlay: #004d70;
+
+  /* Border */
+  --border: rgba(252, 191, 73, 0.18);
+  --border-active: rgba(247, 127, 0, 0.5);
+  --border-danger: rgba(214, 40, 40, 0.5);
+
+  /* Text */
+  --foreground: #eae2b7;
+  --muted-foreground: rgba(234, 226, 183, 0.5);
+
+  /* Semantic */
+  --primary: #f77f00;
+  --primary-foreground: #001824;
+  --secondary: #003049;
+  --secondary-foreground: #eae2b7;
+  --destructive: #d62828;
+  --destructive-foreground: #eae2b7;
+  --accent: #fcbf49;
+  --accent-foreground: #001824;
+  --ring: rgba(247, 127, 0, 0.6);
+
+  /* Card */
+  --card: #003049;
+  --card-foreground: #eae2b7;
+
+  /* Popover */
+  --popover: #00405f;
+  --popover-foreground: #eae2b7;
+
+  /* Muted */
+  --muted: #002233;
+  --muted-foreground: rgba(234, 226, 183, 0.5);
+
+  /* Input */
+  --input: rgba(0, 48, 73, 0.8);
+  --input-background: rgba(0, 48, 73, 0.8);
+
+  /* Switch */
+  --switch-background: #002233;
+
+  /* Chart colors */
+  --chart-1: #f77f00;
+  --chart-2: #fcbf49;
+  --chart-3: #d62828;
+  --chart-4: #00405f;
+  --chart-5: #eae2b7;
+
+  /* Radius — sharp, pixel-feeling corners */
+  --radius: 2px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+
+  /* Sidebar */
+  --sidebar: #003049;
+  --sidebar-foreground: #eae2b7;
+  --sidebar-primary: #f77f00;
+  --sidebar-primary-foreground: #001824;
+  --sidebar-accent: rgba(247, 127, 0, 0.12);
+  --sidebar-accent-foreground: #f77f00;
+  --sidebar-border: rgba(252, 191, 73, 0.18);
+  --sidebar-ring: rgba(247, 127, 0, 0.6);
+
+  /* Font weights */
+  --font-weight-medium: 400;
   --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --font-size: 14px;
 }
 
+/* Dark mode is the default for this design */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --background: #001824;
+  --foreground: #eae2b7;
+  --card: #003049;
+  --card-foreground: #eae2b7;
+  --popover: #00405f;
+  --popover-foreground: #eae2b7;
+  --primary: #f77f00;
+  --primary-foreground: #001824;
+  --secondary: #003049;
+  --secondary-foreground: #eae2b7;
+  --muted: #002233;
+  --muted-foreground: rgba(234, 226, 183, 0.5);
+  --accent: #fcbf49;
+  --accent-foreground: #001824;
+  --destructive: #d62828;
+  --destructive-foreground: #eae2b7;
+  --border: rgba(252, 191, 73, 0.18);
+  --input: rgba(0, 48, 73, 0.8);
+  --ring: rgba(247, 127, 0, 0.6);
+  --sidebar: #003049;
+  --sidebar-foreground: #eae2b7;
+  --sidebar-primary: #f77f00;
+  --sidebar-primary-foreground: #001824;
+  --sidebar-accent: rgba(247, 127, 0, 0.12);
+  --sidebar-accent-foreground: #f77f00;
+  --sidebar-border: rgba(252, 191, 73, 0.18);
+  --sidebar-ring: rgba(247, 127, 0, 0.6);
 }
 
 @theme inline {
@@ -105,10 +142,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -117,6 +154,16 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Brand color utilities */
+  --color-space: var(--color-space);
+  --color-flag: var(--color-flag);
+  --color-orange: var(--color-orange);
+  --color-gold: var(--color-gold);
+  --color-vanilla: var(--color-vanilla);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-overlay: var(--surface-overlay);
 }
 
 @layer base {
@@ -124,58 +171,258 @@
     @apply border-border outline-ring/50;
   }
 
-  body {
-    @apply bg-background text-foreground;
-  }
-
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
-
   html {
     font-size: var(--font-size);
   }
 
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-pixel), monospace;
+    letter-spacing: 0.04em;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-pixel), monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+  }
+
   h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 1.5rem;
+    line-height: 1.4;
   }
 
   h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 1.25rem;
+    line-height: 1.4;
   }
 
   h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 1rem;
+    line-height: 1.4;
   }
 
   h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  button,
+  label,
+  input,
+  select,
+  textarea {
+    font-family: var(--font-pixel), monospace;
+    letter-spacing: 0.04em;
   }
 
   label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-gold);
   }
 
-  button {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+  input,
+  textarea,
+  select {
+    font-size: 0.75rem;
+    color: var(--foreground);
   }
+}
 
-  input {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-normal);
-    line-height: 1.5;
+/* Pixel Border Utilities */
+.pixel-border {
+  border: 2px solid var(--color-gold);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 48, 73, 0.8),
+    0 0 0 1px var(--color-gold),
+    4px 4px 0 0 rgba(252, 191, 73, 0.3);
+}
+
+.pixel-border-orange {
+  border: 2px solid var(--color-orange);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 48, 73, 0.8),
+    0 0 0 1px var(--color-orange),
+    4px 4px 0 0 rgba(247, 127, 0, 0.25);
+}
+
+.pixel-border-red {
+  border: 2px solid var(--color-flag);
+  box-shadow: 4px 4px 0 0 rgba(214, 40, 40, 0.2);
+}
+
+.pixel-border-success {
+  border: 2px solid #4caf50;
+  box-shadow: 4px 4px 0 0 rgba(76, 175, 80, 0.2);
+}
+
+/* Scanline Overlay */
+.scanlines {
+  position: relative;
+}
+
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.06) 2px,
+    rgba(0, 0, 0, 0.06) 4px
+  );
+  border-radius: inherit;
+}
+
+/* Pixel Divider */
+.pixel-divider {
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-gold) 0px,
+    var(--color-gold) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  border: none;
+  opacity: 0.5;
+}
+
+/* Pixel Grid Background */
+.pixel-grid {
+  background-image: linear-gradient(
+      rgba(252, 191, 73, 0.04) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(252, 191, 73, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* RPG Button Styles */
+.rpg-button {
+  font-family: var(--font-pixel), monospace;
+  border-radius: var(--radius);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4);
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
+}
+
+.rpg-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+.rpg-button:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+/* Stat Field Styles */
+.stat-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-gold);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.stat-input {
+  background: rgba(0, 48, 73, 0.8);
+  border: 2px solid rgba(252, 191, 73, 0.2);
+  color: var(--foreground);
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  width: 100%;
+  border-radius: var(--radius);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.stat-input::placeholder {
+  color: rgba(234, 226, 183, 0.3);
+}
+
+.stat-input:focus {
+  outline: none;
+  border-color: var(--color-orange);
+  box-shadow: 0 0 12px rgba(247, 127, 0, 0.3);
+}
+
+.stat-input.error {
+  border-color: var(--color-flag);
+}
+
+.stat-error {
+  font-size: 0.5rem;
+  color: var(--color-flag);
+  margin-top: 4px;
+  display: block;
+}
+
+/* Pulse Animation for Active Steps */
+@keyframes pulse-orange {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(247, 127, 0, 0.4);
   }
+  50% {
+    box-shadow: 0 0 0 8px rgba(247, 127, 0, 0);
+  }
+}
+
+.pulse-orange {
+  animation: pulse-orange 1.5s ease-in-out infinite;
+}
+
+/* Blink Animation for Dialogue Cursor */
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* XP Bar Segmented Fill */
+.xp-fill-segmented {
+  background: repeating-linear-gradient(
+    90deg,
+    #fcbf49 0px,
+    #fcbf49 6px,
+    #f7a825 6px,
+    #f7a825 8px
+  );
+}
+
+/* Glow Effects */
+.glow-gold {
+  box-shadow: 0 0 20px rgba(252, 191, 73, 0.4);
+}
+
+.glow-orange {
+  box-shadow: 0 0 20px rgba(247, 127, 0, 0.4);
+}
+
+.glow-red {
+  box-shadow: 0 0 20px rgba(214, 40, 40, 0.4);
 }

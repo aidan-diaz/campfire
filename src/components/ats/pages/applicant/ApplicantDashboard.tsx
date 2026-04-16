@@ -1,55 +1,71 @@
-'use client';
+"use client";
 
-import { useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAts } from '@/context/AtsContext';
-import { XPBar } from '@/components/ats/shared/XPBar';
-import { JourneyPath } from '@/components/ats/shared/JourneyPath';
-import { TaskCard } from '@/components/ats/shared/TaskCard';
-import { NewQuestApplyModal } from '@/components/ats/shared/NewQuestApplyModal';
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAts } from "@/context/AtsContext";
+import { XPBar } from "@/components/ats/shared/XPBar";
+import { JourneyPath } from "@/components/ats/shared/JourneyPath";
+import { TaskCard } from "@/components/ats/shared/TaskCard";
+import { ResumeUpload } from "@/components/ats/shared/ResumeUpload";
+import { NewQuestApplyModal } from "@/components/ats/shared/NewQuestApplyModal";
+import { Badge } from "@/components/ats/ui/badge";
+import { Button } from "@/components/ats/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ats/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ats/ui/tabs";
 import {
-  getCompanyById, allTasks, Task,
-  stageStoryLabels, Application,
+  getCompanyById,
+  allTasks,
+  Task,
+  stageStoryLabels,
+  Application,
   getTeamMemberById,
   type Job,
-} from '@/data/ats/mockData';
+} from "@/data/ats/mockData";
 import {
-  Map, MessageSquare, Trophy, Sparkles, ChevronRight,
-  Building2, Swords, Upload, FileText,
-} from 'lucide-react';
-import { motion } from 'motion/react';
+  Map,
+  MessageSquare,
+  Trophy,
+  Building2,
+  Swords,
+  ChevronRight,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { retro } from "@/lib/animations";
 
 function toDisplayFirstName(value: string): string {
   const trimmed = value.trim();
-  if (!trimmed || trimmed.length > 24) return 'Applicant';
+  if (!trimmed || trimmed.length > 24) return "Adventurer";
   return trimmed;
 }
 
 export default function ApplicantDashboard() {
-  const { currentApplicant, allJobs, completeTask, uploadApplicantResume } = useAts();
+  const { currentApplicant, allJobs, completeTask, uploadApplicantResume } =
+    useAts();
   const jobById = (id: string) => allJobs.find((j) => j.id === id);
   const router = useRouter();
   const [applyModal, setApplyModal] = useState(false);
   const [applyModalJobId, setApplyModalJobId] = useState<string | null>(null);
   const [taskCompleteModal, setTaskCompleteModal] = useState<Task | null>(null);
-  const [journeyTab, setJourneyTab] = useState<'active' | 'strengthen'>('active');
-  const [selectedResumeFile, setSelectedResumeFile] = useState<File | null>(null);
-  const [isUploadingResume, setIsUploadingResume] = useState(false);
-  const resumeInputRef = useRef<HTMLInputElement | null>(null);
   const displayFirstName = toDisplayFirstName(currentApplicant.firstName);
 
   const activeApplications = currentApplicant.applications.filter(
-    (a) => a.stage !== 'hired' && a.stage !== 'rejected'
+    (a) => a.stage !== "hired" && a.stage !== "rejected"
   );
   const completedApplications = currentApplicant.applications.filter(
-    (a) => a.stage === 'hired' || a.stage === 'rejected'
+    (a) => a.stage === "hired" || a.stage === "rejected"
   );
 
-  const completedTaskIds = new Set(currentApplicant.completedTasks.map((ct) => ct.taskId));
-  const suggestedTasks = allTasks.filter((t) => !completedTaskIds.has(t.id) && t.type === 'general').slice(0, 3);
+  const completedTaskIds = new Set(
+    currentApplicant.completedTasks.map((ct) => ct.taskId)
+  );
+  const suggestedTasks = allTasks
+    .filter((t) => !completedTaskIds.has(t.id) && t.type === "general")
+    .slice(0, 3);
 
   const openJobs = allJobs.filter(
-    (j) => j.status === 'open' && !currentApplicant.applications.some((a) => a.jobId === j.id)
+    (j) =>
+      j.status === "open" &&
+      !currentApplicant.applications.some((a) => a.jobId === j.id)
   );
 
   const handleCompleteTask = async (task: Task) => {
@@ -57,18 +73,7 @@ export default function ApplicantDashboard() {
       await completeTask(task.id, task.points);
       setTaskCompleteModal(task);
     } catch {
-      /* optional: surface error */
-    }
-  };
-
-  const handleResumeUpload = async (file: File) => {
-    setIsUploadingResume(true);
-    try {
-      await uploadApplicantResume(file);
-    } catch {
-      return;
-    } finally {
-      setIsUploadingResume(false);
+      /* error handling */
     }
   };
 
@@ -83,240 +88,285 @@ export default function ApplicantDashboard() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: '#0a0a14' }}>
-      {/* Header */}
-      <div className="px-6 pt-8 pb-6 border-b" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
+    <div
+      className="min-h-screen"
+      style={{ background: "var(--background)" }}
+    >
+      <div
+        className="px-6 pt-8 pb-6 border-b-2"
+        style={{ borderColor: "var(--border)" }}
+      >
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-1">
-            <Map size={16} style={{ color: '#7c3aed' }} />
-            <span style={{ fontSize: 12, color: '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>YOUR JOURNEY</span>
+            <Map size={16} style={{ color: "var(--color-orange)" }} />
+            <span
+              className="text-[10px] uppercase tracking-widest"
+              style={{ color: "var(--color-orange)" }}
+            >
+              Your Journey
+            </span>
           </div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
-            Welcome back, {displayFirstName}
+          <h1
+            className="text-xl uppercase tracking-wider"
+            style={{ color: "var(--color-gold)" }}
+          >
+            Welcome Back, {displayFirstName}
           </h1>
-          <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
-            {activeApplications.length} active quest{activeApplications.length !== 1 ? 's' : ''} · {currentApplicant.completedTasks.length} challenges completed
+          <p
+            className="text-xs mt-1"
+            style={{ color: "var(--muted-foreground)" }}
+          >
+            ► {activeApplications.length} active quest
+            {activeApplications.length !== 1 ? "s" : ""} ·{" "}
+            {currentApplicant.completedTasks.length} challenges completed
           </p>
         </div>
-        <XPBar level={currentApplicant.level} xp={currentApplicant.xp} xpToNextLevel={currentApplicant.xpToNextLevel} />
+        <XPBar
+          level={currentApplicant.level}
+          xp={currentApplicant.xp}
+          xpToNextLevel={currentApplicant.xpToNextLevel}
+        />
       </div>
 
       <div className="px-6 py-6 space-y-6">
         {!currentApplicant.resumeUrl && (
-          <div
-            className="rounded-xl border p-4 space-y-3"
-            style={{ borderColor: 'rgba(124,58,237,0.2)', background: 'rgba(124,58,237,0.06)' }}
-          >
-            <div className="flex items-center gap-2">
-              <FileText size={14} style={{ color: '#a78bfa' }} />
-              <span style={{ fontSize: 13, color: '#f1f5f9', fontWeight: 700 }}>Add your resume</span>
-            </div>
-            <p style={{ fontSize: 12, color: '#94a3b8' }}>
-              Upload your resume once and we will attach it automatically every time you apply.
-            </p>
-            <input
-              ref={resumeInputRef}
-              type="file"
-              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              onChange={(event) => {
-                const file = event.target.files?.[0] ?? null;
-                setSelectedResumeFile(file);
-                if (file) {
-                  void handleResumeUpload(file);
-                }
-              }}
-              style={{ display: 'none' }}
-            />
-            <button
-              type="button"
-              onClick={() => resumeInputRef.current?.click()}
-              disabled={isUploadingResume}
-              className="rounded-lg px-3 py-2 inline-flex items-center gap-2 transition-all hover:opacity-90 disabled:opacity-40"
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: '#a78bfa',
-                background: 'rgba(124,58,237,0.12)',
-                border: '1px solid rgba(124,58,237,0.25)',
-              }}
-            >
-              <Upload size={13} />
-              {isUploadingResume ? 'Uploading...' : 'Choose Resume'}
-            </button>
-            {selectedResumeFile && !isUploadingResume && (
-              <p style={{ fontSize: 11, color: '#94a3b8' }}>
-                Selected: {selectedResumeFile.name}
-              </p>
-            )}
-          </div>
+          <ResumeUpload
+            onUpload={uploadApplicantResume}
+            currentResumeUrl={currentApplicant.resumeUrl}
+            currentResumeFileName={currentApplicant.resumeFileName}
+          />
         )}
 
         {currentApplicant.resumeUrl && (
-          <div
-            className="rounded-xl border p-3 flex items-center justify-between gap-3"
-            style={{ borderColor: 'rgba(16,185,129,0.25)', background: 'rgba(16,185,129,0.06)' }}
-          >
-            <div className="flex items-center gap-2">
-              <FileText size={14} style={{ color: '#34d399' }} />
-              <span style={{ fontSize: 12, color: '#cbd5e1' }}>
-                Resume on file{currentApplicant.resumeFileName ? `: ${currentApplicant.resumeFileName}` : ''}
-              </span>
-            </div>
-            <a href={currentApplicant.resumeUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#34d399', fontWeight: 600 }}>
-              View
-            </a>
-          </div>
+          <ResumeUpload
+            onUpload={uploadApplicantResume}
+            currentResumeUrl={currentApplicant.resumeUrl}
+            currentResumeFileName={currentApplicant.resumeFileName}
+            compact
+          />
         )}
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setJourneyTab('active')}
-            className="rounded-xl px-4 py-2.5 transition-all"
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              background: journeyTab === 'active' ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'rgba(255,255,255,0.04)',
-              color: journeyTab === 'active' ? '#fff' : '#94a3b8',
-              border: `1px solid ${journeyTab === 'active' ? 'transparent' : 'rgba(124,58,237,0.15)'}`,
-              boxShadow: journeyTab === 'active' ? '0 0 20px rgba(124,58,237,0.25)' : 'none',
-            }}
-          >
-            {activeApplications.length === 1 ? '1 Active Quest' : `${activeApplications.length} Active Quests`}
-          </button>
-          <button
-            type="button"
-            onClick={() => setJourneyTab('strengthen')}
-            className="rounded-xl px-4 py-2.5 transition-all"
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              background: journeyTab === 'strengthen' ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'rgba(255,255,255,0.04)',
-              color: journeyTab === 'strengthen' ? '#fff' : '#94a3b8',
-              border: `1px solid ${journeyTab === 'strengthen' ? 'transparent' : 'rgba(124,58,237,0.15)'}`,
-              boxShadow: journeyTab === 'strengthen' ? '0 0 20px rgba(124,58,237,0.25)' : 'none',
-            }}
-          >
-            Strengthen Skills
-          </button>
-        </div>
+        <Tabs defaultValue="active" className="w-full">
+          <TabsList>
+            <TabsTrigger value="active">
+              {activeApplications.length === 1
+                ? "1 Active Quest"
+                : `${activeApplications.length} Active Quests`}
+            </TabsTrigger>
+            <TabsTrigger value="strengthen">Strengthen Skills</TabsTrigger>
+          </TabsList>
 
-        {journeyTab === 'active' && (
-          <div className="space-y-4 w-full">
+          <TabsContent value="active" className="space-y-4 pt-4">
             {activeApplications.length === 0 ? (
-              <div className="rounded-xl border text-center py-12" style={{ borderColor: 'rgba(124,58,237,0.1)', background: 'rgba(255,255,255,0.01)' }}>
-                <Map size={32} style={{ color: '#334155', margin: '0 auto 12px' }} />
-                <p style={{ fontSize: 14, color: '#475569' }}>No active quests yet.</p>
-                <button onClick={() => openApplyModal()} style={{ fontSize: 13, color: '#a78bfa', marginTop: 8 }}>Start your first journey →</button>
-              </div>
+              <Card className="text-center py-12">
+                <CardContent>
+                  <Map
+                    size={32}
+                    style={{ color: "var(--muted-foreground)", margin: "0 auto 12px" }}
+                  />
+                  <p
+                    className="text-sm"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
+                    No active quests yet.
+                  </p>
+                  <Button
+                    variant="ghost"
+                    className="mt-4"
+                    onClick={() => openApplyModal()}
+                  >
+                    Start your first journey →
+                  </Button>
+                </CardContent>
+              </Card>
             ) : (
               activeApplications.map((app) => (
-                <ApplicationCard key={app.id} app={app} onCompleteTask={handleCompleteTask} completedTaskIds={completedTaskIds} jobById={jobById} />
+                <ApplicationCard
+                  key={app.id}
+                  app={app}
+                  onCompleteTask={handleCompleteTask}
+                  completedTaskIds={completedTaskIds}
+                  jobById={jobById}
+                />
               ))
             )}
-          </div>
-        )}
 
-        {journeyTab === 'strengthen' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
-            <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(124,58,237,0.15)', background: 'rgba(255,255,255,0.01)' }}>
-              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
-                <Sparkles size={14} style={{ color: '#f59e0b' }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>Suggested Challenges</span>
-              </div>
-              <div className="p-3 space-y-2">
-                {suggestedTasks.map((task) => (
-                  <TaskCard key={task.id} task={task} onComplete={handleCompleteTask} />
-                ))}
-                {suggestedTasks.length === 0 && (
-                  <div className="py-6 text-center">
-                    <Trophy size={24} style={{ color: '#f59e0b', margin: '0 auto 8px' }} />
-                    <p style={{ fontSize: 12, color: '#64748b' }}>All general challenges complete!</p>
-                  </div>
-                )}
-                <button
-                  onClick={() => router.push('/applicant/tasks')}
-                  className="w-full rounded-lg py-2 mt-1 flex items-center justify-center gap-2 transition-all hover:opacity-80"
-                  style={{ background: 'rgba(124,58,237,0.1)', color: '#a78bfa', fontSize: 13, fontWeight: 600 }}
+            {completedApplications.length > 0 && (
+              <div className="pt-4">
+                <div className="pixel-divider mb-4" />
+                <h2
+                  className="text-sm uppercase tracking-wider mb-4"
+                  style={{ color: "var(--color-gold)" }}
                 >
-                  <Swords size={14} />
-                  View All Challenges
-                </button>
+                  Past Quests
+                </h2>
+                {completedApplications.map((app) => (
+                  <ApplicationCard
+                    key={app.id}
+                    app={app}
+                    onCompleteTask={handleCompleteTask}
+                    completedTaskIds={completedTaskIds}
+                    jobById={jobById}
+                  />
+                ))}
               </div>
-            </div>
+            )}
+          </TabsContent>
 
-            <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
-                <Building2 size={14} style={{ color: '#a78bfa' }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#f1f5f9' }}>New Quests Available</span>
-              </div>
-              <div className="divide-y divide-[rgba(124,58,237,0.06)]">
-                {openJobs.slice(0, 3).map((job) => {
-                  const company = getCompanyById(job.companyId);
-                  return (
-                    <div key={job.id} className="px-4 py-3 flex items-center justify-between gap-2">
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9' }}>{job.title}</div>
-                        <div style={{ fontSize: 11, color: company?.color }}>{company?.name}</div>
-                      </div>
-                      <button
-                        onClick={() => openApplyModal(job.id)}
-                        className="shrink-0 rounded-lg px-3 py-1.5 transition-all hover:opacity-80"
-                        style={{ background: 'rgba(124,58,237,0.15)', color: '#a78bfa', fontSize: 11, fontWeight: 600 }}
+          <TabsContent value="strengthen" className="pt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <span style={{ color: "var(--color-gold)" }}>★</span>
+                    Suggested Challenges
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {suggestedTasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onComplete={handleCompleteTask}
+                    />
+                  ))}
+                  {suggestedTasks.length === 0 && (
+                    <div className="py-6 text-center">
+                      <Trophy
+                        size={24}
+                        style={{ color: "var(--color-gold)", margin: "0 auto 8px" }}
+                      />
+                      <p
+                        className="text-xs"
+                        style={{ color: "var(--muted-foreground)" }}
                       >
-                        Apply
-                      </button>
+                        All general challenges complete!
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
+                  )}
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => router.push("/applicant/tasks")}
+                  >
+                    <Swords size={14} />
+                    View All Challenges
+                  </Button>
+                </CardContent>
+              </Card>
 
-        {journeyTab === 'active' && completedApplications.length > 0 && (
-          <div className="space-y-4 w-full pt-2 border-t" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#f1f5f9' }}>Past Quests</h2>
-            {completedApplications.map((app) => (
-              <ApplicationCard key={app.id} app={app} onCompleteTask={handleCompleteTask} completedTaskIds={completedTaskIds} jobById={jobById} />
-            ))}
-          </div>
-        )}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 size={14} style={{ color: "var(--color-gold)" }} />
+                    New Quests Available
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {openJobs.slice(0, 3).map((job) => {
+                    const company = getCompanyById(job.companyId);
+                    return (
+                      <div
+                        key={job.id}
+                        className="flex items-center justify-between gap-2 p-3"
+                        style={{
+                          background: "rgba(247,127,0,0.06)",
+                          border: "1px solid var(--border)",
+                        }}
+                      >
+                        <div>
+                          <div
+                            className="text-xs"
+                            style={{ color: "var(--foreground)" }}
+                          >
+                            {job.title}
+                          </div>
+                          <div
+                            className="text-[10px] uppercase tracking-wider"
+                            style={{ color: company?.color || "var(--color-orange)" }}
+                          >
+                            {company?.name}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => openApplyModal(job.id)}
+                        >
+                          Apply
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
-      <NewQuestApplyModal open={applyModal} onClose={closeApplyModal} initialJobId={applyModalJobId} />
+      <NewQuestApplyModal
+        open={applyModal}
+        onClose={closeApplyModal}
+        initialJobId={applyModalJobId}
+      />
 
-      {/* Task Complete Modal */}
-      {taskCompleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-sm rounded-2xl border text-center p-8"
-            style={{ background: '#0f0f1e', borderColor: 'rgba(245,158,11,0.3)' }}
+      <AnimatePresence>
+        {taskCompleteModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(0,24,36,0.9)" }}
           >
-            <div
-              className="flex items-center justify-center rounded-full mx-auto mb-4"
-              style={{ width: 64, height: 64, background: 'linear-gradient(135deg,#f59e0b,#d97706)', boxShadow: '0 0 30px rgba(245,158,11,0.4)' }}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={retro.spring}
+              className="w-full max-w-sm pixel-border text-center p-8 scanlines"
+              style={{ background: "var(--surface)" }}
             >
-              <Trophy size={28} color="white" />
-            </div>
-            <h3 style={{ fontSize: 20, fontWeight: 800, color: '#f1f5f9', marginBottom: 8 }}>Challenge Complete!</h3>
-            <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 12 }}>{taskCompleteModal.name}</p>
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <Sparkles size={16} style={{ color: '#f59e0b' }} />
-              <span style={{ fontSize: 24, fontWeight: 800, color: '#f59e0b' }}>+{taskCompleteModal.points} XP</span>
-            </div>
-            <button
-              onClick={() => setTaskCompleteModal(null)}
-              className="w-full rounded-xl py-2.5 transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: 'white', fontSize: 14, fontWeight: 600 }}
-            >
-              Awesome!
-            </button>
-          </motion.div>
-        </div>
-      )}
+              <div
+                className="flex items-center justify-center mx-auto mb-4"
+                style={{
+                  width: 64,
+                  height: 64,
+                  background: "linear-gradient(135deg, var(--color-gold), var(--color-orange))",
+                  boxShadow: "3px 3px 0 rgba(0,0,0,0.4), 0 0 24px rgba(252,191,73,0.4)",
+                }}
+              >
+                <Trophy size={28} style={{ color: "var(--primary-foreground)" }} />
+              </div>
+              <h3
+                className="text-sm uppercase tracking-wider mb-2"
+                style={{ color: "var(--color-gold)" }}
+              >
+                Challenge Complete!
+              </h3>
+              <p
+                className="text-xs mb-4"
+                style={{ color: "var(--foreground)" }}
+              >
+                {taskCompleteModal.name}
+              </p>
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <span style={{ color: "var(--color-gold)" }}>★</span>
+                <span
+                  className="text-2xl"
+                  style={{ color: "var(--color-gold)", fontWeight: 700 }}
+                >
+                  +{taskCompleteModal.points} XP
+                </span>
+              </div>
+              <Button
+                onClick={() => setTaskCompleteModal(null)}
+                className="w-full"
+                variant="gold"
+              >
+                Awesome!
+              </Button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -338,51 +388,70 @@ function ApplicationCard({
   if (!job || !company) return null;
 
   const guides = app.assignedInterviewerIds.map(getTeamMemberById).filter(Boolean);
-  const isTerminal = app.stage === 'hired' || app.stage === 'rejected';
+  const isTerminal = app.stage === "hired" || app.stage === "rejected";
 
   const availableTasks = allTasks.filter(
     (t) =>
       !completedTaskIds.has(t.id) &&
-      (t.type === 'general' ||
-        (t.type === 'company' && t.companyId === app.companyId) ||
-        (t.type === 'role' && t.jobId === app.jobId))
+      (t.type === "general" ||
+        (t.type === "company" && t.companyId === app.companyId) ||
+        (t.type === "role" && t.jobId === app.jobId))
   );
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border overflow-hidden"
+      className="pixel-border overflow-hidden"
       style={{
-        borderColor: isTerminal ? (app.stage === 'hired' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.2)') : `${company.color}30`,
-        background: isTerminal ? (app.stage === 'hired' ? 'rgba(16,185,129,0.04)' : 'rgba(239,68,68,0.03)') : `${company.color}08`,
+        background: "var(--surface)",
+        borderLeftWidth: 4,
+        borderLeftColor: isTerminal
+          ? app.stage === "hired"
+            ? "#4caf50"
+            : "var(--color-flag)"
+          : company.color,
       }}
     >
-      {/* Header */}
       <div className="flex items-start gap-4 p-4">
         <div
-          className="flex items-center justify-center rounded-xl shrink-0 text-lg"
-          style={{ width: 44, height: 44, background: `${company.color}20`, border: `1px solid ${company.color}30` }}
+          className="flex items-center justify-center shrink-0 text-lg"
+          style={{
+            width: 44,
+            height: 44,
+            background: `${company.color}20`,
+            border: `2px solid ${company.color}40`,
+          }}
         >
           {company.logo}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>{job.title}</h3>
-              <div style={{ fontSize: 12, color: company.color, fontWeight: 600 }}>{company.name}</div>
+              <h3
+                className="text-sm"
+                style={{ color: "var(--foreground)" }}
+              >
+                {job.title}
+              </h3>
+              <div
+                className="text-[10px] uppercase tracking-wider"
+                style={{ color: company.color }}
+              >
+                {company.name}
+              </div>
             </div>
-            <div
-              className="shrink-0 px-2.5 py-1 rounded-full"
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                background: app.stage === 'hired' ? 'rgba(16,185,129,0.15)' : app.stage === 'rejected' ? 'rgba(239,68,68,0.15)' : `${company.color}15`,
-                color: app.stage === 'hired' ? '#10b981' : app.stage === 'rejected' ? '#ef4444' : company.accentColor,
-              }}
+            <Badge
+              variant={
+                app.stage === "hired"
+                  ? "success"
+                  : app.stage === "rejected"
+                    ? "danger"
+                    : "stage"
+              }
             >
               {stageStoryLabels[app.stage]}
-            </div>
+            </Badge>
           </div>
 
           <div className="mt-3">
@@ -391,67 +460,122 @@ function ApplicationCard({
         </div>
       </div>
 
-      {/* Guides */}
       {guides.length > 0 && (
-        <div className="px-4 pb-3 flex items-center gap-2 flex-wrap">
-          <span style={{ fontSize: 11, color: '#64748b' }}>Guides:</span>
-          {guides.map((g) => g && (
-            <div
-              key={g.id}
-              className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              <div
-                className="flex items-center justify-center rounded-full"
-                style={{ width: 18, height: 18, background: `${company.color}30`, fontSize: 8, fontWeight: 700, color: company.color }}
-              >
-                {g.avatar}
-              </div>
-              <span style={{ fontSize: 11, color: '#94a3b8' }}>{g.firstName} · {g.guideArchetype}</span>
-            </div>
-          ))}
+        <div
+          className="px-4 pb-3 flex items-center gap-2 flex-wrap border-t-2"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <span
+            className="text-[10px] uppercase tracking-wider py-2"
+            style={{ color: "var(--muted-foreground)" }}
+          >
+            Guides:
+          </span>
+          {guides.map(
+            (g) =>
+              g && (
+                <div
+                  key={g.id}
+                  className="flex items-center gap-1.5 px-2 py-1"
+                  style={{
+                    background: "rgba(247,127,0,0.08)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <div
+                    className="flex items-center justify-center"
+                    style={{
+                      width: 18,
+                      height: 18,
+                      background: `${company.color}30`,
+                      fontSize: 8,
+                      color: company.color,
+                    }}
+                  >
+                    {g.avatar}
+                  </div>
+                  <span
+                    className="text-[10px]"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
+                    {g.firstName} · {g.guideArchetype}
+                  </span>
+                </div>
+              )
+          )}
         </div>
       )}
 
       {app.feedbackForApplicant && (
         <div
-          className="mx-4 mb-3 rounded-lg border px-3 py-2.5"
-          style={{ borderColor: 'rgba(99,102,241,0.2)', background: 'rgba(99,102,241,0.06)' }}
+          className="mx-4 mb-3 p-3 pixel-border"
+          style={{ background: "rgba(252,191,73,0.06)" }}
         >
           <div className="flex items-center gap-2 mb-1.5">
-            <MessageSquare size={12} style={{ color: '#818cf8' }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#a5b4fc' }}>Guide Feedback</span>
+            <MessageSquare size={12} style={{ color: "var(--color-gold)" }} />
+            <span
+              className="text-[10px] uppercase tracking-wider"
+              style={{ color: "var(--color-gold)" }}
+            >
+              Guide Message
+            </span>
           </div>
-          <p style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.5, fontStyle: 'italic' }}>
-            {`"${app.feedbackForApplicant}"`}
+          <p
+            className="text-xs italic"
+            style={{ color: "var(--foreground)", lineHeight: 1.5 }}
+          >
+            "{app.feedbackForApplicant}"
           </p>
         </div>
       )}
 
-      {/* Expand */}
       {!isTerminal && (
         <>
           <div
-            className="flex items-center justify-between px-4 py-2 cursor-pointer border-t"
-            style={{ borderColor: `${company.color}15` }}
+            className="flex items-center justify-between px-4 py-2 cursor-pointer border-t-2"
+            style={{ borderColor: "var(--border)" }}
             onClick={() => setExpanded(!expanded)}
           >
             <div className="flex items-center gap-2">
-              <Swords size={12} style={{ color: company.accentColor }} />
-              <span style={{ fontSize: 12, color: company.accentColor, fontWeight: 600 }}>
+              <Swords size={12} style={{ color: "var(--color-orange)" }} />
+              <span
+                className="text-[10px] uppercase tracking-wider"
+                style={{ color: "var(--color-orange)" }}
+              >
                 {availableTasks.length} challenges available
               </span>
             </div>
-            <ChevronRight size={14} style={{ color: '#475569', transform: expanded ? 'rotate(90deg)' : 'rotate(0)' }} />
+            <motion.span
+              style={{ color: "var(--color-gold)" }}
+              animate={{ rotate: expanded ? 90 : 0 }}
+              transition={retro.snap}
+            >
+              <ChevronRight size={14} />
+            </motion.span>
           </div>
 
-          {expanded && (
-            <div className="px-4 pb-4 space-y-2">
-              {availableTasks.slice(0, 3).map((t) => (
-                <TaskCard key={t.id} task={t} onComplete={onCompleteTask} compact />
-              ))}
-            </div>
-          )}
+          <AnimatePresence>
+            {expanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={retro.snap}
+                className="overflow-hidden"
+              >
+                <div className="px-4 pb-4 space-y-2">
+                  {availableTasks.slice(0, 3).map((t) => (
+                    <TaskCard
+                      key={t.id}
+                      task={t}
+                      onComplete={onCompleteTask}
+                      compact
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
     </motion.div>

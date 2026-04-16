@@ -1,15 +1,29 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useQuery } from 'convex/react';
-import { useAts } from '@/context/AtsContext';
-import { api } from '../../../../../convex/_generated/api';
-import { getCompanyById, stageLabels, ApplicationStage } from '@/data/ats/mockData';
+import { useRouter } from "next/navigation";
+import { useQuery } from "convex/react";
+import { useAts } from "@/context/AtsContext";
+import { api } from "../../../../../convex/_generated/api";
 import {
-  LayoutDashboard, Briefcase, Plus, TrendingUp, Users, Clock,
-  ChevronRight, CheckCircle2, Star, AlertCircle,
-} from 'lucide-react';
-import { motion } from 'motion/react';
+  getCompanyById,
+  stageLabels,
+  ApplicationStage,
+} from "@/data/ats/mockData";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ats/ui/card";
+import { Badge } from "@/components/ats/ui/badge";
+import { Button } from "@/components/ats/ui/button";
+import {
+  LayoutDashboard,
+  Briefcase,
+  Plus,
+  TrendingUp,
+  Users,
+  Clock,
+  ChevronRight,
+  AlertCircle,
+  Star,
+} from "lucide-react";
+import { motion } from "motion/react";
 
 function toDisplayName(value: string, fallback: string): string {
   const trimmed = value.trim();
@@ -22,20 +36,30 @@ export default function RecruiterDashboard() {
   const router = useRouter();
   const currentUser = useQuery(api.users.getCurrentUser, {});
 
-  const displayFirstName = toDisplayName(currentUser?.firstName ?? currentTeamMember.firstName, 'Manager');
+  const displayFirstName = toDisplayName(
+    currentUser?.firstName ?? currentTeamMember.firstName,
+    "Manager"
+  );
   const company = getCompanyById(currentTeamMember.companyId);
-  const displayCompanyName = currentUser?.companyName?.trim() || company?.name || 'Your Company';
-  const myJobs = allJobs.filter((j) => j.companyId === currentTeamMember.companyId);
-  const openJobs = myJobs.filter((j) => j.status === 'open');
-  const draftJobs = myJobs.filter((j) => j.status === 'draft');
+  const displayCompanyName =
+    currentUser?.companyName?.trim() || company?.name || "Your Company";
+  const myJobs = allJobs.filter(
+    (j) => j.companyId === currentTeamMember.companyId
+  );
+  const openJobs = myJobs.filter((j) => j.status === "open");
+  const draftJobs = myJobs.filter((j) => j.status === "draft");
 
-  // All applicants for my company's jobs
   const myApplicantIds = new Set(myJobs.flatMap((j) => j.applicantIds));
   const myApplicants = allApplicants.filter((a) => myApplicantIds.has(a.id));
 
-  // Pipeline overview
   const stageCounts: Record<ApplicationStage, number> = {
-    applied: 0, screening: 0, interview: 0, final_round: 0, offered: 0, hired: 0, rejected: 0,
+    applied: 0,
+    screening: 0,
+    interview: 0,
+    final_round: 0,
+    offered: 0,
+    hired: 0,
+    rejected: 0,
   };
   myApplicants.forEach((a) => {
     a.applications.forEach((app) => {
@@ -46,190 +70,355 @@ export default function RecruiterDashboard() {
   });
 
   const stageDisplay: { stage: ApplicationStage; color: string }[] = [
-    { stage: 'applied', color: '#94a3b8' },
-    { stage: 'screening', color: '#818cf8' },
-    { stage: 'interview', color: '#f59e0b' },
-    { stage: 'final_round', color: '#f472b6' },
-    { stage: 'offered', color: '#10b981' },
-    { stage: 'hired', color: '#10b981' },
+    { stage: "applied", color: "var(--muted-foreground)" },
+    { stage: "screening", color: "var(--color-gold)" },
+    { stage: "interview", color: "var(--color-orange)" },
+    { stage: "final_round", color: "#f472b6" },
+    { stage: "offered", color: "#4caf50" },
+    { stage: "hired", color: "#4caf50" },
   ];
 
-  // Recent applicants
-  const recentApplicants = myApplicants.slice(0, 5).map((a) => {
-    const appForMyJob = a.applications.find((app) => myJobs.find((j) => j.id === app.jobId));
-    const job = myJobs.find((j) => j.id === appForMyJob?.jobId);
-    return { applicant: a, application: appForMyJob, job };
-  }).filter((x) => x.application && x.job);
+  const recentApplicants = myApplicants
+    .slice(0, 5)
+    .map((a) => {
+      const appForMyJob = a.applications.find((app) =>
+        myJobs.find((j) => j.id === app.jobId)
+      );
+      const job = myJobs.find((j) => j.id === appForMyJob?.jobId);
+      return { applicant: a, application: appForMyJob, job };
+    })
+    .filter((x) => x.application && x.job);
 
-  const roleLabel = currentTeamMember.role === 'hiring_manager' ? 'Hiring Manager' : 'Recruiter';
+  const roleLabel =
+    currentTeamMember.role === "hiring_manager"
+      ? "Hiring Manager"
+      : "Recruiter";
 
   return (
-    <div className="min-h-screen" style={{ background: '#0a0a14' }}>
-      {/* Header */}
-      <div className="px-6 pt-8 pb-6 border-b" style={{ borderColor: 'rgba(124,58,237,0.1)' }}>
+    <div className="min-h-screen" style={{ background: "var(--background)" }}>
+      <div
+        className="px-6 pt-8 pb-6 border-b-2"
+        style={{ borderColor: "var(--border)" }}
+      >
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <LayoutDashboard size={16} style={{ color: company?.color || '#7c3aed' }} />
-              <span style={{ fontSize: 12, color: company?.color || '#7c3aed', fontWeight: 600, letterSpacing: '0.08em' }}>
-                {displayCompanyName.toUpperCase()} · {roleLabel.toUpperCase()}
+              <LayoutDashboard
+                size={16}
+                style={{ color: company?.color || "var(--color-orange)" }}
+              />
+              <span
+                className="text-[10px] uppercase tracking-widest"
+                style={{ color: company?.color || "var(--color-orange)" }}
+              >
+                {displayCompanyName} · {roleLabel}
               </span>
             </div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+            <h1
+              className="text-xl uppercase tracking-wider"
+              style={{ color: "var(--color-gold)" }}
+            >
               Welcome, {displayFirstName}
             </h1>
-            <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
-              {openJobs.length} open roles · {myApplicants.length} total candidates
+            <p
+              className="text-xs mt-1"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              ► {openJobs.length} open roles · {myApplicants.length} total
+              candidates
             </p>
           </div>
-          <button
-            onClick={() => router.push('/recruiter/jobs/new')}
-            className="flex items-center gap-2 rounded-xl px-4 py-2.5 transition-all hover:opacity-90"
-            style={{ background: `linear-gradient(135deg,${company?.color || '#7c3aed'},${company?.color || '#4f46e5'})`, color: 'white', fontSize: 13, fontWeight: 600, boxShadow: `0 0 20px ${company?.color || '#7c3aed'}40` }}
-          >
+          <Button onClick={() => router.push("/recruiter/jobs/new")}>
             <Plus size={16} />
-            Post a Job
-          </button>
+            Post New Quest
+          </Button>
         </div>
       </div>
 
       <div className="px-6 py-6 space-y-6">
-        {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Open Roles', value: openJobs.length, icon: <Briefcase size={18} />, color: company?.color || '#7c3aed' },
-            { label: 'Active Candidates', value: myApplicants.length, icon: <Users size={18} />, color: '#10b981' },
-            { label: 'Avg. Time to Hire', value: '29 days', icon: <Clock size={18} />, color: '#f59e0b' },
-            { label: 'Offer Rate', value: '67%', icon: <TrendingUp size={18} />, color: '#818cf8' },
-          ].map((stat) => (
+            {
+              label: "Open Roles",
+              value: openJobs.length,
+              icon: <Briefcase size={16} />,
+              color: company?.color || "var(--color-orange)",
+            },
+            {
+              label: "Active Candidates",
+              value: myApplicants.length,
+              icon: <Users size={16} />,
+              color: "#4caf50",
+            },
+            {
+              label: "Avg. Time to Hire",
+              value: "29 days",
+              icon: <Clock size={16} />,
+              color: "var(--color-gold)",
+            },
+            {
+              label: "Offer Rate",
+              value: "67%",
+              icon: <TrendingUp size={16} />,
+              color: "var(--color-orange)",
+            },
+          ].map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl border p-4"
-              style={{ background: `${stat.color}08`, borderColor: `${stat.color}20` }}
+              transition={{ delay: i * 0.05 }}
             >
-              <div className="flex items-center gap-2 mb-2" style={{ color: stat.color }}>
-                {stat.icon}
-                <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em' }}>{stat.label.toUpperCase()}</span>
-              </div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: '#f1f5f9' }}>{stat.value}</div>
+              <Card style={{ borderColor: `${stat.color}40` }}>
+                <CardContent className="pt-4">
+                  <div
+                    className="flex items-center gap-2 mb-2"
+                    style={{ color: stat.color }}
+                  >
+                    {stat.icon}
+                    <span className="text-[10px] uppercase tracking-widest">
+                      {stat.label}
+                    </span>
+                  </div>
+                  <div
+                    className="text-2xl"
+                    style={{ color: "var(--foreground)" }}
+                  >
+                    {stat.value}
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           ))}
         </div>
 
-        {/* Pipeline Overview */}
-        <div className="rounded-xl border p-5" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', marginBottom: 16 }}>Hiring Pipeline</h2>
-          <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
-            {stageDisplay.map(({ stage, color }) => (
-              <div key={stage} className="text-center rounded-xl p-3" style={{ background: `${color}08`, border: `1px solid ${color}20` }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color }}>{stageCounts[stage]}</div>
-                <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{stageLabels[stage]}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Candidate Pipeline</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
+              {stageDisplay.map(({ stage, color }) => (
+                <div
+                  key={stage}
+                  className="text-center p-3"
+                  style={{
+                    background: `${color}15`,
+                    border: `1px solid ${color}30`,
+                  }}
+                >
+                  <div
+                    className="text-xl mb-1"
+                    style={{ color }}
+                  >
+                    {stageCounts[stage]}
+                  </div>
+                  <div
+                    className="text-[10px] uppercase tracking-wider"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
+                    {stageLabels[stage]}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Open Jobs */}
-          <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
-              <h2 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>Open Roles</h2>
-              <button onClick={() => router.push('/recruiter/jobs')} style={{ fontSize: 12, color: '#a78bfa' }}>View all →</button>
-            </div>
-            <div className="divide-y divide-[rgba(124,58,237,0.06)]">
+          <Card>
+            <CardHeader className="flex-row items-center justify-between">
+              <CardTitle>Open Roles</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/recruiter/jobs")}
+              >
+                View all →
+              </Button>
+            </CardHeader>
+            <CardContent>
               {openJobs.length === 0 ? (
-                <div className="px-5 py-8 text-center">
-                  <AlertCircle size={24} style={{ color: '#475569', margin: '0 auto 8px' }} />
-                  <p style={{ fontSize: 13, color: '#475569' }}>No open roles. Post your first job!</p>
+                <div className="text-center py-8">
+                  <AlertCircle
+                    size={24}
+                    style={{
+                      color: "var(--muted-foreground)",
+                      margin: "0 auto 8px",
+                    }}
+                  />
+                  <p
+                    className="text-xs"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
+                    No open roles. Post your first job!
+                  </p>
                 </div>
               ) : (
-                openJobs.map((job) => {
-                  const candidateCount = job.applicantIds.length;
-                  return (
-                    <button
-                      key={job.id}
-                      onClick={() => router.push(`/recruiter/jobs/${job.id}`)}
-                      className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-white/[0.02] transition-all"
-                    >
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: '#f1f5f9' }}>{job.title}</div>
-                        <div style={{ fontSize: 11, color: '#64748b' }}>{job.team} · Posted {job.postedDate}</div>
-                      </div>
-                      <div className="ml-auto flex items-center gap-3">
-                        <div className="flex items-center gap-1">
-                          <Users size={12} style={{ color: '#64748b' }} />
-                          <span style={{ fontSize: 11, color: '#94a3b8' }}>{candidateCount}</span>
-                        </div>
-                        <ChevronRight size={14} style={{ color: '#475569' }} />
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-            {draftJobs.length > 0 && (
-              <div className="px-5 py-3 border-t" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
-                <span style={{ fontSize: 11, color: '#64748b' }}>{draftJobs.length} draft{draftJobs.length > 1 ? 's' : ''} in progress</span>
-              </div>
-            )}
-          </div>
-
-          {/* Recent Candidates */}
-          <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(124,58,237,0.12)', background: 'rgba(255,255,255,0.01)' }}>
-            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
-              <h2 style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>Recent Candidates</h2>
-              <Star size={14} style={{ color: '#f59e0b' }} />
-            </div>
-            <div className="divide-y divide-[rgba(124,58,237,0.06)]">
-              {recentApplicants.length === 0 ? (
-                <div className="px-5 py-8 text-center">
-                  <Users size={24} style={{ color: '#475569', margin: '0 auto 8px' }} />
-                  <p style={{ fontSize: 13, color: '#475569' }}>No applicants yet.</p>
-                </div>
-              ) : (
-                recentApplicants.map(({ applicant, application, job }) => {
-                  if (!application || !job) return null;
-                  const stageColor: Record<string, string> = {
-                    applied: '#94a3b8', screening: '#818cf8', interview: '#f59e0b',
-                    final_round: '#f472b6', offered: '#10b981', hired: '#10b981', rejected: '#ef4444',
-                  };
-                  return (
-                    <button
-                      key={applicant.id}
-                      onClick={() => router.push(`/recruiter/jobs/${job.id}`)}
-                      className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-white/[0.02] transition-all"
-                    >
-                      <div
-                        className="flex items-center justify-center rounded-full shrink-0"
-                        style={{ width: 34, height: 34, background: 'linear-gradient(135deg,#7c3aed,#a78bfa)', fontSize: 11, fontWeight: 700, color: 'white' }}
+                <div className="space-y-2">
+                  {openJobs.map((job) => {
+                    const candidateCount = job.applicantIds.length;
+                    return (
+                      <button
+                        key={job.id}
+                        onClick={() => router.push(`/recruiter/jobs/${job.id}`)}
+                        className="w-full flex items-center gap-3 p-3 text-left transition-all"
+                        style={{
+                          background: "rgba(247,127,0,0.04)",
+                          border: "1px solid var(--border)",
+                        }}
                       >
-                        {applicant.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9' }}>
-                          {applicant.firstName} {applicant.lastName}
+                        <div className="flex-1">
+                          <div
+                            className="text-xs"
+                            style={{ color: "var(--foreground)" }}
+                          >
+                            {job.title}
+                          </div>
+                          <div
+                            className="text-[10px]"
+                            style={{ color: "var(--muted-foreground)" }}
+                          >
+                            {job.team} · Posted {job.postedDate}
+                          </div>
                         </div>
-                        <div style={{ fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {job.title}
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <Users
+                              size={12}
+                              style={{ color: "var(--muted-foreground)" }}
+                            />
+                            <span
+                              className="text-[10px]"
+                              style={{ color: "var(--foreground)" }}
+                            >
+                              {candidateCount}
+                            </span>
+                          </div>
+                          <ChevronRight
+                            size={14}
+                            style={{ color: "var(--color-gold)" }}
+                          />
                         </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <div className="px-2 py-0.5 rounded-full" style={{ fontSize: 9, fontWeight: 700, background: `${stageColor[application.stage]}15`, color: stageColor[application.stage] }}>
-                          {stageLabels[application.stage]}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star size={9} style={{ color: '#f59e0b' }} />
-                          <span style={{ fontSize: 10, color: '#f59e0b' }}>Lv.{applicant.level}</span>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })
+                      </button>
+                    );
+                  })}
+                </div>
               )}
-            </div>
-          </div>
+              {draftJobs.length > 0 && (
+                <div
+                  className="mt-3 pt-3 border-t-2"
+                  style={{ borderColor: "var(--border)" }}
+                >
+                  <span
+                    className="text-[10px]"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
+                    {draftJobs.length} draft{draftJobs.length > 1 ? "s" : ""} in
+                    progress
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Star size={14} style={{ color: "var(--color-gold)" }} />
+                Top Candidates
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentApplicants.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users
+                    size={24}
+                    style={{
+                      color: "var(--muted-foreground)",
+                      margin: "0 auto 8px",
+                    }}
+                  />
+                  <p
+                    className="text-xs"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
+                    No applicants yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {recentApplicants.map(({ applicant, application, job }, i) => {
+                    if (!application || !job) return null;
+                    return (
+                      <button
+                        key={applicant.id}
+                        onClick={() => router.push(`/recruiter/jobs/${job.id}`)}
+                        className="w-full flex items-center gap-3 p-3 text-left transition-all"
+                        style={{
+                          background: "rgba(252,191,73,0.04)",
+                          border: "1px solid var(--border)",
+                        }}
+                      >
+                        <div
+                          className="flex items-center justify-center shrink-0 text-[10px]"
+                          style={{
+                            width: 24,
+                            height: 24,
+                            background: "var(--color-gold)",
+                            color: "var(--primary-foreground)",
+                          }}
+                        >
+                          #{i + 1}
+                        </div>
+                        <div
+                          className="flex items-center justify-center shrink-0"
+                          style={{
+                            width: 32,
+                            height: 32,
+                            background:
+                              "linear-gradient(135deg, var(--color-gold), var(--color-orange))",
+                            fontSize: 10,
+                            color: "var(--primary-foreground)",
+                          }}
+                        >
+                          {applicant.avatar}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div
+                            className="text-xs truncate"
+                            style={{ color: "var(--foreground)" }}
+                          >
+                            {applicant.firstName} {applicant.lastName}
+                          </div>
+                          <div
+                            className="text-[10px] truncate"
+                            style={{ color: "var(--muted-foreground)" }}
+                          >
+                            {job.title}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <Badge
+                            variant={
+                              application.stage === "hired"
+                                ? "success"
+                                : application.stage === "rejected"
+                                  ? "danger"
+                                  : "stage"
+                            }
+                          >
+                            {stageLabels[application.stage]}
+                          </Badge>
+                          <Badge variant="level">LV.{applicant.level}</Badge>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -4,10 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAts } from '@/context/AtsContext';
 import { teamMembers, applicants } from '@/data/ats/mockData';
-import { Zap, Briefcase, Users, Star, ChevronRight, Shield } from 'lucide-react';
+import { Zap, Briefcase, Users, Star, ChevronRight, Shield, Sword, Crown, Scroll } from 'lucide-react';
 import { motion } from 'motion/react';
-
-const BG_IMAGE = 'https://images.unsplash.com/photo-1771448234296-78d75c0afe12?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkYXJrJTIwYWJzdHJhY3QlMjBqb3VybmV5JTIwcGF0aCUyMGdsb3dpbmclMjBwdXJwbGV8ZW58MXx8fHwxNzc2MDQ3NzcyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
+import { retro, cardVariants } from '@/lib/animations';
 
 type Step = 'role' | 'applicant-select' | 'team-select';
 
@@ -52,49 +51,40 @@ export default function Landing() {
   const personas = [
     {
       id: 'applicant' as const,
-      title: 'I\'m an Applicant',
+      title: 'ADVENTURER',
       subtitle: 'Start your journey, build your career profile',
-      icon: <Star size={28} style={{ color: '#f59e0b' }} />,
-      color: '#f59e0b',
-      accentBg: 'rgba(245,158,11,0.08)',
-      borderColor: 'rgba(245,158,11,0.25)',
-      glow: '0 0 40px rgba(245,158,11,0.15)',
+      icon: <Sword size={28} style={{ color: 'var(--color-gold)' }} />,
+      color: 'var(--color-gold)',
+      borderColor: 'var(--color-gold)',
     },
     {
       id: 'recruiter' as const,
-      title: 'I\'m a Recruiter',
-      subtitle: 'Post jobs, review candidates, build great teams',
-      icon: <Briefcase size={28} style={{ color: '#a78bfa' }} />,
-      color: '#a78bfa',
-      accentBg: 'rgba(124,58,237,0.08)',
-      borderColor: 'rgba(124,58,237,0.25)',
-      glow: '0 0 40px rgba(124,58,237,0.15)',
+      title: 'GUILD MASTER',
+      subtitle: 'Post quests, review candidates, build great teams',
+      icon: <Crown size={28} style={{ color: 'var(--color-orange)' }} />,
+      color: 'var(--color-orange)',
+      borderColor: 'var(--color-orange)',
     },
     {
       id: 'interviewer' as const,
-      title: 'I\'m an Interviewer',
+      title: 'GUIDE',
       subtitle: 'Guide candidates through their hiring journey',
-      icon: <Users size={28} style={{ color: '#60a5fa' }} />,
-      color: '#60a5fa',
-      accentBg: 'rgba(37,99,235,0.08)',
-      borderColor: 'rgba(37,99,235,0.25)',
-      glow: '0 0 40px rgba(37,99,235,0.15)',
+      icon: <Scroll size={28} style={{ color: 'var(--foreground)' }} />,
+      color: 'var(--foreground)',
+      borderColor: 'var(--border)',
     },
   ];
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{ background: '#07070f' }}>
-      {/* Background */}
-      <div className="absolute inset-0 z-0">
-        <img src={BG_IMAGE} alt="" className="w-full h-full object-cover opacity-10" />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.15) 0%, transparent 70%)' }} />
-      </div>
-
-      {/* Grid overlay */}
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden scanlines" style={{ background: 'var(--background)', position: 'relative' }}>
+      {/* Pixel grid overlay */}
       <div className="absolute inset-0 z-0" style={{
-        backgroundImage: 'linear-gradient(rgba(124,58,237,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(124,58,237,0.05) 1px, transparent 1px)',
-        backgroundSize: '60px 60px',
+        backgroundImage: 'linear-gradient(rgba(252,191,73,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(252,191,73,0.04) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
       }} />
+
+      {/* Radial glow */}
+      <div className="absolute inset-0 z-0" style={{ background: 'radial-gradient(ellipse at center, rgba(252,191,73,0.1) 0%, transparent 60%)' }} />
 
       <div className="relative z-10 w-full max-w-3xl mx-auto px-6 py-12">
         {/* Logo */}
@@ -104,27 +94,33 @@ export default function Landing() {
           className="flex flex-col items-center mb-12"
         >
           <div
-            className="flex items-center justify-center rounded-2xl mb-4"
-            style={{ width: 64, height: 64, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', boxShadow: '0 0 40px rgba(124,58,237,0.5)' }}
+            className="flex items-center justify-center mb-4"
+            style={{
+              width: 64,
+              height: 64,
+              background: 'linear-gradient(135deg, var(--color-orange), var(--color-gold))',
+              border: '4px solid var(--color-gold)',
+              boxShadow: '0 0 40px rgba(252,191,73,0.5), 8px 8px 0 rgba(0,0,0,0.3)',
+            }}
           >
-            <Zap size={32} color="white" />
+            <Zap size={32} style={{ color: 'var(--background)' }} />
           </div>
-          <h1 style={{ fontSize: 36, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.03em', lineHeight: 1 }}>
-            QuestHire
+          <h1 style={{ fontSize: 24, fontFamily: 'var(--font-pixel)', color: 'var(--color-gold)', letterSpacing: '0.05em', lineHeight: 1 }}>
+            [⚡] QUESTHIRE
           </h1>
-          <p style={{ fontSize: 14, color: '#64748b', marginTop: 8 }}>
-            Where careers level up. Where top talent rises faster.
+          <p style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', marginTop: 12, textAlign: 'center', lineHeight: 1.8 }}>
+            WHERE CAREERS LEVEL UP · WHERE TOP TALENT RISES FASTER
           </p>
         </motion.div>
 
         {/* Step: Role Selection */}
         {step === 'role' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h2 className="text-center mb-2" style={{ fontSize: 20, fontWeight: 700, color: '#f1f5f9' }}>
-              Choose your role
+            <h2 className="text-center mb-2" style={{ fontSize: 14, fontFamily: 'var(--font-pixel)', color: 'var(--color-gold)', letterSpacing: '0.08em' }}>
+              SELECT YOUR CLASS
             </h2>
-            <p className="text-center mb-8" style={{ fontSize: 14, color: '#64748b' }}>
-              Each persona unlocks a different experience on the platform
+            <p className="text-center mb-8" style={{ fontSize: 9, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', lineHeight: 1.8 }}>
+              EACH CLASS UNLOCKS A DIFFERENT EXPERIENCE
             </p>
             <div className="grid grid-cols-1 gap-4">
               {personas.map((p, i) => (
@@ -132,24 +128,31 @@ export default function Landing() {
                   key={p.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
+                  whileHover={{ y: -4, boxShadow: `0 0 24px ${p.color === 'var(--foreground)' ? 'rgba(234,226,183,0.2)' : p.color === 'var(--color-gold)' ? 'rgba(252,191,73,0.3)' : 'rgba(247,127,0,0.3)'}` }}
+                  whileTap={{ y: 2 }}
+                  transition={{ delay: i * 0.1, ...retro.snap }}
                   onClick={() => handleRoleSelect(p.id)}
-                  className="flex items-center gap-5 rounded-2xl border text-left transition-all duration-200 hover:scale-[1.01]"
+                  className="pixel-border flex items-center gap-5 text-left"
                   style={{
                     padding: '20px 24px',
-                    background: p.accentBg,
+                    background: 'var(--surface)',
                     borderColor: p.borderColor,
-                    boxShadow: 'none',
                   }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = p.glow; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'; }}
                 >
-                  <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 56, height: 56, background: 'rgba(255,255,255,0.04)', border: `1px solid ${p.borderColor}` }}>
+                  <div
+                    className="flex items-center justify-center shrink-0"
+                    style={{
+                      width: 56,
+                      height: 56,
+                      background: 'rgba(0,0,0,0.4)',
+                      border: `2px solid ${p.borderColor}`,
+                    }}
+                  >
                     {p.icon}
                   </div>
                   <div className="flex-1">
-                    <div style={{ fontSize: 17, fontWeight: 700, color: '#f1f5f9' }}>{p.title}</div>
-                    <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 2 }}>{p.subtitle}</div>
+                    <div style={{ fontSize: 12, fontFamily: 'var(--font-pixel)', color: p.color }}>{p.title}</div>
+                    <div style={{ fontSize: 8, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', marginTop: 8, lineHeight: 1.8 }}>{p.subtitle.toUpperCase()}</div>
                   </div>
                   <ChevronRight size={20} style={{ color: p.color }} />
                 </motion.button>
@@ -157,8 +160,8 @@ export default function Landing() {
             </div>
 
             <div className="flex items-center justify-center gap-2 mt-8">
-              <Shield size={12} style={{ color: '#475569' }} />
-              <span style={{ fontSize: 11, color: '#475569' }}>Demo platform — no real data stored</span>
+              <Shield size={12} style={{ color: 'var(--muted-foreground)' }} />
+              <span style={{ fontSize: 8, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)' }}>DEMO PLATFORM — NO REAL DATA STORED</span>
             </div>
           </motion.div>
         )}
@@ -166,12 +169,17 @@ export default function Landing() {
         {/* Step: Applicant Select */}
         {step === 'applicant-select' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <button onClick={() => setStep('role')} style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>← Back</button>
-            <h2 className="text-center mb-2" style={{ fontSize: 20, fontWeight: 700, color: '#f1f5f9' }}>
-              Select your applicant profile
+            <button
+              onClick={() => setStep('role')}
+              style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', marginBottom: 16 }}
+            >
+              ← BACK
+            </button>
+            <h2 className="text-center mb-2" style={{ fontSize: 14, fontFamily: 'var(--font-pixel)', color: 'var(--color-gold)', letterSpacing: '0.05em' }}>
+              SELECT YOUR ADVENTURER
             </h2>
-            <p className="text-center mb-8" style={{ fontSize: 14, color: '#64748b' }}>
-              Choose from our seed applicant profiles to explore the journey experience
+            <p className="text-center mb-8" style={{ fontSize: 9, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', lineHeight: 1.8 }}>
+              CHOOSE A PROFILE TO EXPLORE THE JOURNEY EXPERIENCE
             </p>
             <div className="space-y-3">
               {applicants.map((a, i) => (
@@ -179,27 +187,37 @@ export default function Landing() {
                   key={a.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.08 }}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ y: 1 }}
+                  transition={{ delay: i * 0.08, ...retro.snap }}
                   onClick={() => handleApplicantSelect(a.id)}
-                  className="w-full flex items-center gap-4 rounded-2xl border text-left transition-all hover:scale-[1.005]"
-                  style={{ padding: '16px 20px', background: 'rgba(245,158,11,0.05)', borderColor: 'rgba(245,158,11,0.15)' }}
+                  className="w-full pixel-border flex items-center gap-4 text-left"
+                  style={{ padding: '16px 20px', background: 'var(--surface)' }}
                 >
                   <div
-                    className="flex items-center justify-center rounded-full shrink-0"
-                    style={{ width: 44, height: 44, background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: 'white', fontWeight: 700, fontSize: 14 }}
+                    className="flex items-center justify-center shrink-0"
+                    style={{
+                      width: 44,
+                      height: 44,
+                      background: 'linear-gradient(135deg, var(--color-orange), var(--color-gold))',
+                      fontSize: 14,
+                      fontFamily: 'var(--font-pixel)',
+                      color: 'var(--background)',
+                      border: '2px solid var(--color-gold)',
+                    }}
                   >
                     {a.avatar}
                   </div>
                   <div className="flex-1">
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>{a.firstName} {a.lastName}</div>
-                    <div style={{ fontSize: 12, color: '#94a3b8' }}>{a.jobGoal}</div>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>Level {a.level}</span>
-                      <span style={{ fontSize: 11, color: '#64748b' }}>{a.xp.toLocaleString()} XP</span>
-                      <span style={{ fontSize: 11, color: '#64748b' }}>{a.applications.length} applications</span>
+                    <div style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: 'var(--foreground)' }}>{a.firstName.toUpperCase()} {a.lastName.toUpperCase()}</div>
+                    <div style={{ fontSize: 8, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', marginTop: 4 }}>{a.jobGoal.toUpperCase()}</div>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="px-2 py-0.5" style={{ fontSize: 7, fontFamily: 'var(--font-pixel)', color: 'var(--color-gold)', background: 'rgba(252,191,73,0.15)', border: '1px solid var(--color-gold)' }}>LV.{a.level}</span>
+                      <span style={{ fontSize: 7, fontFamily: 'var(--font-pixel)', color: 'var(--color-gold)' }}>{a.xp.toLocaleString()} XP</span>
+                      <span style={{ fontSize: 7, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)' }}>{a.applications.length} QUESTS</span>
                     </div>
                   </div>
-                  <ChevronRight size={16} style={{ color: '#f59e0b' }} />
+                  <ChevronRight size={16} style={{ color: 'var(--color-gold)' }} />
                 </motion.button>
               ))}
             </div>
@@ -209,43 +227,56 @@ export default function Landing() {
         {/* Step: Team Member Select */}
         {step === 'team-select' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <button onClick={() => setStep('role')} style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>← Back</button>
-            <h2 className="text-center mb-2" style={{ fontSize: 20, fontWeight: 700, color: '#f1f5f9' }}>
-              Select your team profile
+            <button
+              onClick={() => setStep('role')}
+              style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', marginBottom: 16 }}
+            >
+              ← BACK
+            </button>
+            <h2 className="text-center mb-2" style={{ fontSize: 14, fontFamily: 'var(--font-pixel)', color: 'var(--color-gold)', letterSpacing: '0.05em' }}>
+              SELECT YOUR {selectedRole === 'recruiter' ? 'GUILD MASTER' : 'GUIDE'}
             </h2>
-            <p className="text-center mb-8" style={{ fontSize: 14, color: '#64748b' }}>
-              {selectedRole === 'recruiter' ? 'Explore the recruiter experience' : 'Explore the interviewer experience'}
+            <p className="text-center mb-8" style={{ fontSize: 9, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', lineHeight: 1.8 }}>
+              {selectedRole === 'recruiter' ? 'EXPLORE THE GUILD MASTER EXPERIENCE' : 'EXPLORE THE GUIDE EXPERIENCE'}
             </p>
             <div className="space-y-3">
               {filteredTeamMembers.map((m, i) => {
-                const roleLabel = m.role === 'hiring_manager' ? 'Hiring Manager' : m.role === 'recruiter' ? 'Recruiter' : 'Team Member';
-                const colorMap: Record<string, string> = { nexacloud: '#7c3aed', synapseai: '#2563eb', momentumgtm: '#db2777' };
-                const color = colorMap[m.companyId] ?? '#7c3aed';
-                const companyNames: Record<string, string> = { nexacloud: 'NexaCloud', synapseai: 'Synapse AI', momentumgtm: 'Momentum GTM' };
+                const roleLabel = m.role === 'hiring_manager' ? 'HIRING MANAGER' : m.role === 'recruiter' ? 'RECRUITER' : 'TEAM MEMBER';
+                const companyNames: Record<string, string> = { nexacloud: 'NEXACLOUD', synapseai: 'SYNAPSE AI', momentumgtm: 'MOMENTUM GTM' };
                 return (
                   <motion.button
                     key={m.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.07 }}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ y: 1 }}
+                    transition={{ delay: i * 0.07, ...retro.snap }}
                     onClick={() => handleTeamMemberSelect(m.id)}
-                    className="w-full flex items-center gap-4 rounded-2xl border text-left transition-all hover:scale-[1.005]"
-                    style={{ padding: '16px 20px', background: `rgba(0,0,0,0.2)`, borderColor: `${color}30` }}
+                    className="w-full pixel-border flex items-center gap-4 text-left"
+                    style={{ padding: '16px 20px', background: 'var(--surface)' }}
                   >
                     <div
-                      className="flex items-center justify-center rounded-full shrink-0"
-                      style={{ width: 44, height: 44, background: `linear-gradient(135deg,${color},${color}99)`, color: 'white', fontWeight: 700, fontSize: 14 }}
+                      className="flex items-center justify-center shrink-0"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        background: 'linear-gradient(135deg, var(--color-orange), var(--color-gold))',
+                        fontSize: 14,
+                        fontFamily: 'var(--font-pixel)',
+                        color: 'var(--background)',
+                        border: '2px solid var(--color-orange)',
+                      }}
                     >
                       {m.avatar}
                     </div>
                     <div className="flex-1">
-                      <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>{m.firstName} {m.lastName}</div>
-                      <div style={{ fontSize: 12, color: '#94a3b8' }}>{roleLabel} · {companyNames[m.companyId]}</div>
-                      <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{m.team}</div>
+                      <div style={{ fontSize: 10, fontFamily: 'var(--font-pixel)', color: 'var(--foreground)' }}>{m.firstName.toUpperCase()} {m.lastName.toUpperCase()}</div>
+                      <div style={{ fontSize: 8, fontFamily: 'var(--font-pixel)', color: 'var(--color-orange)', marginTop: 4 }}>{roleLabel} · {companyNames[m.companyId]}</div>
+                      <div style={{ fontSize: 7, fontFamily: 'var(--font-pixel)', color: 'var(--muted-foreground)', marginTop: 4 }}>{m.team.toUpperCase()}</div>
                     </div>
                     <div className="text-right">
-                      <div style={{ fontSize: 10, color: color, fontWeight: 600 }}>{m.guideArchetype}</div>
-                      <ChevronRight size={16} style={{ color }} />
+                      <div style={{ fontSize: 8, fontFamily: 'var(--font-pixel)', color: 'var(--color-gold)' }}>{m.guideArchetype.toUpperCase()}</div>
+                      <ChevronRight size={16} style={{ color: 'var(--color-orange)', marginTop: 4 }} />
                     </div>
                   </motion.button>
                 );
