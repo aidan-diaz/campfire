@@ -1,0 +1,13 @@
+@import "tailwindcss" source(none);
+@source "../**/*.{js,ts,jsx,tsx}";
+
+@import "tw-animate-css";
+
+@import "../styles/ats/fonts.css";
+@import "../styles/ats/theme.css";
+
+/* Keep Next.js root layout font variables as the default sans/mono stack */
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
